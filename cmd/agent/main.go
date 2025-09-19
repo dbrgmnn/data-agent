@@ -1,18 +1,21 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"monitoring/internal/agent"
-	"time"
 )
 
 func main() {
-	for {
-		metric := agent.CollectMetrics()
-		err := agent.SendMetrics(metric)
-		if err != nil {
-			log.Println("Failed to send metrics:", err)
-		}
-		time.Sleep(1 * time.Second)
+	serverFlag := flag.String("server", "", "Server URL to send metrics to")
+	flag.Parse()
+
+	serverURl := *serverFlag
+	if serverURl == "" {
+		serverURl = agent.DefaultServerURL()
 	}
+
+	log.Println("Sending metrics to:", serverURl)
+
+	agent.Run(serverURl)
 }

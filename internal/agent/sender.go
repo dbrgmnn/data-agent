@@ -8,16 +8,17 @@ import (
 	"net/http"
 )
 
-func SendMetrics(metric models.Metric) error {
+func SendMetrics(metric models.Metric, server string) error {
 	data, err := json.Marshal(metric)
 	if err != nil {
 		return fmt.Errorf("failed to marshal metric: %w", err)
 	}
 
-	resp, err := http.Post("http://localhost:8080/metrics", "application/json", bytes.NewBuffer(data))
+	resp, err := http.Post(server, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("failed to send HTTP request: %w", err)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("server returned status: %s", resp.Status)

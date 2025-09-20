@@ -14,13 +14,13 @@ func DefaultServerURL() string {
 	return url
 }
 
-func Run(serverURl string) {
+func Run(serverURL string) {
 	for {
 		metric := CollectMetrics()
-		err := SendMetrics(metric, serverURl)
+		err := SendMetrics(metric, serverURL)
 		if err != nil {
 			log.Println("Failed to send metrics:", err)
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }

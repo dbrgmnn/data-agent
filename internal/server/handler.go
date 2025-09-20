@@ -7,15 +7,15 @@ import (
 	"net/http"
 )
 
-func MetricsHandler(w http.ResponseWriter, r *http.Request) {
-	var m models.Metric
-	err := json.NewDecoder(r.Body).Decode(&m)
+func MetricsHandler(writer http.ResponseWriter, requesr *http.Request) {
+	var metric models.Metric
+	err := json.NewDecoder(requesr.Body).Decode(&metric)
 	if err != nil {
-		http.Error(w, "Invalid data", http.StatusBadRequest)
+		http.Error(writer, "Invalid data", http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Received metrics: %+v\n", m)
+	log.Printf("Received metrics: %+v\n", metric)
 
-	w.WriteHeader(http.StatusOK)
+	writer.WriteHeader(http.StatusOK)
 }

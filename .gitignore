@@ -8,9 +8,13 @@
 *.dylib
 
 # Mac end IDE
-.DS_Store
+/.DS_Store
 .vscode/
 .idea/
+
+
+# env files
+.env
 
 # Go
 /go.sum

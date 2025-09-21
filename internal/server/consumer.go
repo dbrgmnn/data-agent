@@ -10,7 +10,7 @@ import (
 )
 
 func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
-	// Connect to RabbitMQ server
+	// connect to RabbitMQ server
 	conn, err := amqp.Dial(rabbitURL)
 	if err != nil {
 		return err
@@ -20,7 +20,7 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 		return err
 	}
 
-	// Declare a queue
+	// declare a queue
 	q, err := ch.QueueDeclare(
 		"metrics", // name
 		true,      // durable
@@ -33,7 +33,7 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 		return err
 	}
 
-	// Subscribe to the queue
+	// subscribe to the queue
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
@@ -47,7 +47,7 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 		return err
 	}
 
-	// Start a goroutine to process messages
+	// start a goroutine to process messages
 	go func() {
 		for d := range msgs {
 			var metric models.Metric
@@ -57,7 +57,7 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 				continue
 			}
 
-			// Send metric to database
+			// send metric to database
 			if err := SaveMetric(db, metric); err != nil {
 				log.Println("Failed to save metric:", err)
 				d.Nack(false, true) // send to queue again

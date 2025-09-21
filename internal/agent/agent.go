@@ -9,12 +9,13 @@ import (
 func Run(ctx context.Context, rabbitURL string) {
 	log.Println("Sending metrics to RabbitMQ:", rabbitURL)
 	for {
+		// check if context is done
 		select {
 		case <-ctx.Done():
 			log.Println("Stoping agent")
 			return
 		default:
-			// Collect and send metrics every 5 seconds
+			// collect and send metrics every 5 seconds
 			metric := CollectMetrics()
 			err := SendMetrics(metric, rabbitURL)
 			if err != nil {

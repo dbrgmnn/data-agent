@@ -17,12 +17,12 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
-	// Load .env file
+	// load .env file
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using system environment variables")
 	}
 
-	// Default values
+	// default values
 	cfg := &Config{
 		RabbitURL: getEnv("RABBIT_URL", "amqp://guest:guest@localhost:5672/"),
 		DBHost:    getEnv("DB_HOST", "localhost"),
@@ -35,6 +35,7 @@ func LoadConfig() *Config {
 }
 
 func getEnv(key, defaultVal string) string {
+	// check variable in the system environment
 	if val := os.Getenv(key); val != "" {
 		return val
 	}

@@ -11,24 +11,24 @@ import (
 )
 
 func InitDB() (*sql.DB, error) {
-	// Load config from .env file
+	// load config from .env file
 	cfg := config.LoadConfig()
 	if cfg.DBHost == "" || cfg.DBPort == "" || cfg.DBUser == "" || cfg.DBPass == "" || cfg.DBName == "" {
 		return nil, fmt.Errorf("database configuration variables are not set properly")
 	}
 
-	// Make connection string
+	// make connection string
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPass, cfg.DBName)
 
-	// Open connection
+	// open connection
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Printf("Error opening database: %v\n", err)
 		return nil, err
 	}
 
-	// Test connection
+	// test connection
 	err = db.Ping()
 	if err != nil {
 		log.Printf("Error connecting to the database: %v\n", err)
@@ -40,7 +40,7 @@ func InitDB() (*sql.DB, error) {
 }
 
 func SaveMetric(db *sql.DB, metric models.Metric) error {
-	// Insert metric into database
+	// insert metric into database
 	_, err := db.Exec(
 		`INSERT INTO metrics (hostname, os, platform, platform_ver, kernel_ver, uptime, cpu, ram, time) 
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,

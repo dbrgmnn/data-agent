@@ -13,26 +13,31 @@ import (
 )
 
 func CollectMetrics() models.Metric {
+	// get hostname
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "unknown"
 	}
 
+	// get host info
 	hostInfo, err := host.Info()
 	if err != nil {
 		log.Println("host.Info error:", err)
 	}
 
+	// get CPU info
 	cpuInfo, err := cpu.Percent(time.Second, false)
 	if err != nil {
 		log.Println("cpu.Percent error:", err)
 	}
 
+	// get memory info
 	memInfo, err := mem.VirtualMemory()
 	if err != nil {
 		log.Println("mem.VirtualMemory error:", err)
 	}
 
+	// prepare metrics
 	memPercent := 0.0
 	if memInfo != nil {
 		memPercent = memInfo.UsedPercent

@@ -10,13 +10,13 @@ import (
 )
 
 func main() {
-	// Load configuration
+	// load configuration
 	cfg := config.LoadConfig()
 
-	// Context
+	// context
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Handel signal to stop
+	// handel signal to stop
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -24,6 +24,6 @@ func main() {
 		log.Println("Ctrl+C detected, stopping...")
 		cancel() // cancel context
 	}()
-	// Run agent
+	// run agent
 	agent.Run(ctx, cfg.RabbitURL)
 }

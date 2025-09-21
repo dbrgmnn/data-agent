@@ -4,37 +4,31 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"monitoring/internal/config"
 	"monitoring/internal/models"
-	"os"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func InitDB() (*sql.DB, error) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Println("Error loading .env file, proceeding with system environment variables")
-	}
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-
-	if host == "" || port == "" || user == "" || password == "" || dbname == "" {
+	// Load config from .env file
+	cfg := config.LoadConfig()
+	if cfg.DBHost == "" || cfg.DBPort == "" || cfg.DBUser == "" || cfg.DBPass == "" || cfg.DBName == "" {
 		return nil, fmt.Errorf("database configuration variables are not set properly")
 	}
 
+	// Make connection string
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPass, cfg.DBName)
 
+	// Open connection
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Printf("Error opening database: %v\n", err)
 		return nil, err
 	}
 
+	// Test connection
 	err = db.Ping()
 	if err != nil {
 		log.Printf("Error connecting to the database: %v\n", err)
@@ -46,6 +40,7 @@ func InitDB() (*sql.DB, error) {
 }
 
 func SaveMetric(db *sql.DB, metric models.Metric) error {
+	// Insert metric into database
 	_, err := db.Exec(
 		`INSERT INTO metrics (hostname, os, platform, platform_ver, kernel_ver, uptime, cpu, ram, time) 
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,

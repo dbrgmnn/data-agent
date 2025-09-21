@@ -1,21 +1,29 @@
 package main
 
 import (
-	"flag"
+	"context"
 	"log"
 	"monitoring/internal/agent"
+	"monitoring/internal/config"
+	"os"
+	"os/signal"
 )
 
 func main() {
-	serverFlag := flag.String("server", "", "Server URL to send metrics to")
-	flag.Parse()
+	// Load configuration
+	cfg := config.LoadConfig()
 
-	serverURl := *serverFlag
-	if serverURl == "" {
-		serverURl = agent.DefaultServerURL()
-	}
+	// Context
+	ctx, cancel := context.WithCancel(context.Background())
 
-	log.Println("Sending metrics to:", serverURl)
-
-	agent.Run(serverURl)
+	// Handel signal to stop
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		log.Println("Ctrl+C detected, stopping...")
+		cancel() // cancel context
+	}()
+	// Run agent
+	agent.Run(ctx, cfg.RabbitURL)
 }

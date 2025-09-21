@@ -7,6 +7,8 @@ require (
 	github.com/shirou/gopsutil/v3 v3.24.5
 )
 
+require github.com/streadway/amqp v1.1.0
+
 require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/lib/pq v1.10.9

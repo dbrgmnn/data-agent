@@ -1,26 +1,27 @@
 package agent
 
 import (
+	"context"
 	"log"
-	"os"
 	"time"
 )
 
-func DefaultServerURL() string {
-	url := os.Getenv("SERVER_URL")
-	if url == "" {
-		url = "http://localhost:8080/metrics"
-	}
-	return url
-}
-
-func Run(serverURL string) {
+func Run(ctx context.Context, rabbitURL string) {
+	log.Println("Sending metrics to RabbitMQ:", rabbitURL)
 	for {
-		metric := CollectMetrics()
-		err := SendMetrics(metric, serverURL)
-		if err != nil {
-			log.Println("Failed to send metrics:", err)
+		select {
+		case <-ctx.Done():
+			log.Println("Stoping agent")
+			return
+		default:
+			// Collect and send metrics every 5 seconds
+			metric := CollectMetrics()
+			err := SendMetrics(metric, rabbitURL)
+			if err != nil {
+				log.Println("Failed to send metrics:", err)
+			}
+			time.Sleep(5 * time.Second)
+
 		}
-		time.Sleep(5 * time.Second)
 	}
 }

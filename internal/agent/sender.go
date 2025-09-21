@@ -49,8 +49,9 @@ func SendMetrics(metric models.Metric, server string) error {
 		false,  // mandatory
 		false,  // immediate
 		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        body,
+			DeliveryMode: amqp.Persistent, // make message persistent
+			ContentType:  "application/json",
+			Body:         body,
 		},
 	)
 	if err != nil {

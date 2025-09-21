@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"monitoring/internal/config"
 	"monitoring/internal/server"
 )
 
@@ -14,11 +15,10 @@ func main() {
 	defer db.Close()
 
 	// start RabbitMQ consumer
-	rabbitURL := "amqp://guest:guest@localhost:5672/"
+	rabbitURL := config.LoadConfig().RabbitURL
 	if err := server.StartMetricsConsumer(db, rabbitURL); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Server is running and consuming metrics from RabbitMQ")
 
 	// block main
 	select {}

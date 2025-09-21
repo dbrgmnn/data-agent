@@ -29,7 +29,7 @@ func LoadConfig() *Config {
 		DBPort:    getEnv("DB_PORT", "5432"),
 		DBUser:    getEnv("DB_USER", "postgres"),
 		DBPass:    getEnv("DB_PASS", "password"),
-		DBName:    getEnv("DB_NAME", "metricsdb"),
+		DBName:    getEnv("DB_NAME", "monitoring"),
 	}
 	return cfg
 }

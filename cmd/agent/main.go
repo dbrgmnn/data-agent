@@ -25,5 +25,5 @@ func main() {
 		cancel() // cancel context
 	}()
 	// run agent
-	agent.Run(ctx, cfg.RabbitURL)
+	agent.Run(ctx, cfg.RabbitURLAgent)
 }

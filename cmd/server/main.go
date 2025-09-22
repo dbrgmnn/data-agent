@@ -15,7 +15,7 @@ func main() {
 	defer db.Close()
 
 	// start RabbitMQ consumer
-	rabbitURL := config.LoadConfig().RabbitURL
+	rabbitURL := config.LoadConfig().RabbitURLServer
 	if err := server.StartMetricsConsumer(db, rabbitURL); err != nil {
 		log.Fatal(err)
 	}

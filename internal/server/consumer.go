@@ -50,7 +50,8 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 	// start a goroutine to process messages
 	go func() {
 		for d := range msgs {
-			var metric models.Metric
+			var metric models.ExtendedMetrics
+			// decode message
 			if err := json.Unmarshal(d.Body, &metric); err != nil {
 				log.Println("Failed to decode metric:", err)
 				d.Nack(false, false) // don't send to queue

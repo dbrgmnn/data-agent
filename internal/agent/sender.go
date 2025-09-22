@@ -9,7 +9,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func SendMetrics(metric models.Metric, server string) error {
+func SendMetrics(metric models.ExtendedMetrics, server string) error {
 	// connect to RabbitMQ server
 	conn, err := amqp.Dial(server)
 	if err != nil {
@@ -55,7 +55,7 @@ func SendMetrics(metric models.Metric, server string) error {
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to publish a messege: %w", err)
+		return fmt.Errorf("failed to publish a message: %w", err)
 	}
 
 	log.Printf("Metric sent to queue: %+v\n", metric)

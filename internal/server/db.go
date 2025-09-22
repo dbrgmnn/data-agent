@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"monitoring/internal/config"
@@ -39,11 +40,15 @@ func InitDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func SaveMetric(db *sql.DB, metric models.Metric) error {
+func SaveMetric(db *sql.DB, metric models.ExtendedMetrics) error {
+	// serialize complex types to JSON
+	diskJSON, _ := json.Marshal(metric.DiskMetrics)
+	netJSON, _ := json.Marshal(metric.NetMetrics)
+
 	// insert metric into database
 	_, err := db.Exec(
-		`INSERT INTO metrics (hostname, os, platform, platform_ver, kernel_ver, uptime, cpu, ram, time) 
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		`INSERT INTO metrics (hostname, os, platform, platform_ver, kernel_ver, uptime, cpu, ram, disk, network, time) 
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 		metric.Hostname,
 		metric.OS,
 		metric.Platform,
@@ -52,6 +57,8 @@ func SaveMetric(db *sql.DB, metric models.Metric) error {
 		metric.Uptime,
 		metric.CPU,
 		metric.RAM,
+		diskJSON,
+		netJSON,
 		metric.Time,
 	)
 

@@ -5,8 +5,10 @@ CREATE TABLE IF NOT EXISTS metrics (
     platform TEXT,
     platform_ver TEXT,
     kernel_ver TEXT,
+    uptime BIGINT,
     cpu NUMERIC,
     ram NUMERIC,
-    uptime BIGINT,
+    disk JSONB,
+    network JSONB,
     time TIMESTAMPTZ
 );

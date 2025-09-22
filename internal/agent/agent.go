@@ -16,7 +16,8 @@ func Run(ctx context.Context, rabbitURL string) {
 			return
 		default:
 			// collect and send metrics every 5 seconds
-			metric := CollectMetrics()
+			base := CollectBaseMetrics()
+			metric := CollectAllMetrics(base)
 			err := SendMetrics(metric, rabbitURL)
 			if err != nil {
 				log.Println("Failed to send metrics:", err)

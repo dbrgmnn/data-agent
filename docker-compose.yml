@@ -5,9 +5,8 @@ services:
     ports:
       - "5672:5672" # rabbitMQ default port
       - "15672:15672" # rabbitMQ management UI
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    env_file:
+      - .env
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -18,10 +17,8 @@ services:
   postgres:
     image: postgres:16
     container_name: postgres
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_NAME}
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:

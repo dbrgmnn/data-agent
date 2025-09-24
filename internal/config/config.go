@@ -8,13 +8,12 @@ import (
 )
 
 type Config struct {
-	RabbitURLServer string
-	RabbitURLAgent  string
-	DBHost          string
-	DBPort          string
-	DBUser          string
-	DBPass          string
-	DBName          string
+	RabbitURL string
+	DBHost    string
+	DBPort    string
+	DBUser    string
+	DBPass    string
+	DBName    string
 }
 
 func LoadConfig() *Config {
@@ -25,13 +24,12 @@ func LoadConfig() *Config {
 
 	// default values
 	cfg := &Config{
-		RabbitURLServer: getEnv("RABBIT_URL_SERVER", "amqp://guest:guest@localhost:5672/"),
-		RabbitURLAgent:  getEnv("RABBIT_URL_AGENT", "amqp://guest:guest@localhost:5672/"),
-		DBHost:          getEnv("DB_HOST", "localhost"),
-		DBPort:          getEnv("DB_PORT", "5432"),
-		DBUser:          getEnv("DB_USER", "postgres"),
-		DBPass:          getEnv("DB_PASS", "password"),
-		DBName:          getEnv("DB_NAME", "monitoring"),
+		RabbitURL: getEnv("RABBIT_URL", "amqp://guest:guest@localhost:5672/"),
+		DBHost:    getEnv("DB_HOST", "localhost"),
+		DBPort:    getEnv("DB_PORT", "5432"),
+		DBUser:    getEnv("DB_USER", "postgres"),
+		DBPass:    getEnv("DB_PASS", "postgres"),
+		DBName:    getEnv("DB_NAME", "monitoring"),
 	}
 	return cfg
 }

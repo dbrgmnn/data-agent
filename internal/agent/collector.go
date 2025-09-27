@@ -26,10 +26,15 @@ func CollectBaseMetrics() models.BaseMetrics {
 	if err != nil {
 		log.Println("host.Info error:", err)
 	}
-	os := fallbackValue(hostInfo.OS, "unknown")
-	platform := fallbackValue(hostInfo.Platform, "unknown")
-	platform_ver := fallbackValue(hostInfo.PlatformVersion, "unknown")
-	kernel_ver := fallbackValue(hostInfo.KernelVersion, "unknown")
+	var uptime uint64
+	var os, platform, platformVer, kernelVer string
+	if hostInfo != nil {
+		os = hostInfo.OS
+		platform = hostInfo.Platform
+		platformVer = hostInfo.PlatformVersion
+		kernelVer = hostInfo.KernelVersion
+		uptime = hostInfo.Uptime
+	}
 
 	// get CPU info
 	cpuInfo, err := cpu.Percent(time.Second, false)
@@ -55,21 +60,13 @@ func CollectBaseMetrics() models.BaseMetrics {
 		Hostname:    hostname,
 		OS:          os,
 		Platform:    platform,
-		PlatformVer: platform_ver,
-		KernelVer:   kernel_ver,
-		Uptime:      hostInfo.Uptime,
+		PlatformVer: platformVer,
+		KernelVer:   kernelVer,
+		Uptime:      uptime,
 		CPU:         cpuUsage,
 		RAM:         memPercent,
 		Time:        time.Now(),
 	}
-}
-
-// returns defoult value if value is empty
-func fallbackValue(value, defoult string) string {
-	if value == "" {
-		return defoult
-	}
-	return value
 }
 
 // disk metrics collection

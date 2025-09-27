@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"monitoring/internal/grpcserver/gen"
 )
 
 // implements the gRPC server for handling metrics-related requests
 type MetricsServer struct {
-	UnimplementedMetricsServiceServer
+	gen.UnimplementedMetricsServiceServer
 	DB *sql.DB
 }
 
@@ -18,7 +19,7 @@ func NewMetricsServer(db *sql.DB) *MetricsServer {
 }
 
 // retrieves the latest metrics from the database
-func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *GetMetricsRequest) (*GetMetricsResponse, error) {
+func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *gen.GetMetricsRequest) (*gen.GetMetricsResponse, error) {
 	query := `SELECT id, hostname, os, platform, platform_ver,
 	kernel_ver, uptime, cpu, ram, disk::text, network::text, time
 	FROM metrics
@@ -31,29 +32,30 @@ func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *GetMetricsReq
 	}
 	defer rows.Close()
 
-	var metrics []*Metric
+	var metrics []*gen.Metric
 	for rows.Next() {
-		var m Metric
-		var diskStr, networkStr string
-		if err := rows.Scan(&m.Hostname, &m.Os, &m.Platform, &m.PlatformVer,
-			&m.KernelVer, &m.Uptime, &m.Cpu, &m.Ram, &diskStr, &networkStr, &m.Time); err != nil {
+		var m gen.Metric
+		var id int
+		var diskJSON, networkJSON string
+
+		if err := rows.Scan(&id, &m.Hostname, &m.Os, &m.Platform, &m.PlatformVer,
+			&m.KernelVer, &m.Uptime, &m.Cpu, &m.Ram, &diskJSON, &networkJSON, &m.Time); err != nil {
 			return nil, fmt.Errorf("scanning metric row: %w", err)
 		}
 
-		// unmarshal disk and network JSON strings into appropriate fields
-		if err := json.Unmarshal([]byte(diskStr), &m.Disk); err != nil {
+		// unmarshal JSON fields
+		if err := json.Unmarshal([]byte(diskJSON), &m.Disk); err != nil {
 			return nil, fmt.Errorf("unmarshaling disk JSON: %w", err)
 		}
-
-		if err := json.Unmarshal([]byte(networkStr), &m.Network); err != nil {
+		if err := json.Unmarshal([]byte(networkJSON), &m.Network); err != nil {
 			return nil, fmt.Errorf("unmarshaling network JSON: %w", err)
 		}
 
 		metrics = append(metrics, &m)
-		if err := rows.Err(); err != nil {
-			return nil, fmt.Errorf("iterating metric rows: %w", err)
-		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating metric rows: %w", err)
 	}
 
-	return &GetMetricsResponse{Metrics: metrics}, nil
+	return &gen.GetMetricsResponse{Metrics: metrics}, nil
 }

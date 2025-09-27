@@ -35,6 +35,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.server
+    ports:
+      - "50051:50051" # gRPC server port
     depends_on:
       rabbitmq:
         condition: service_healthy

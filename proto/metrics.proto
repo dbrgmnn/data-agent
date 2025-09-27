@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package monitoring;
 
-option go_package = "./internal/grpc;grpcserver";
+option go_package = "monitoring/internal/grpcserver/gen;gen";
 
 service MetricsService {
     rpc GetLatestMetrics(GetMetricsRequest) returns (GetMetricsResponse);
@@ -18,6 +18,26 @@ message GetMetricsByHostRequest {
     int32 limit = 2;
 }
 
+message DiskMetric {
+    string path = 1;
+    uint64 total = 2;
+    uint64 used = 3;
+    uint64 free = 4;
+    double used_percent = 5;
+}
+
+message NetworkMetric {
+    string name = 1;
+    uint64 bytes_sent = 2;
+    uint64 bytes_recv = 3;
+    uint64 packets_sent = 4;
+    uint64 packets_recv = 5;
+    uint32 err_in = 6;
+    uint32 err_out = 7;
+    uint32 drop_in = 8;
+    uint32 drop_out = 9;
+}
+
 message Metric {
     string hostname = 1;
     string os = 2;
@@ -27,8 +47,8 @@ message Metric {
     int64 uptime = 6;
     double cpu = 7;
     double ram = 8;
-    string disk = 9;
-    string network = 10;
+    repeated DiskMetric disk = 9;
+    repeated NetworkMetric network = 10;
     string time = 11;
 }
 

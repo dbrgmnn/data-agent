@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 	"monitoring/internal/agent"
 	"os"
 	"os/signal"
-	"regexp"
 )
 
 func main() {
@@ -23,21 +21,6 @@ func main() {
 		cancel() // cancel context
 	}()
 	// run agent
-	url := parseFlags()
+	url := agent.ParseFlags()
 	agent.Run(ctx, url)
-}
-
-func parseFlags() string {
-	// parse flag
-	rabbitURL := flag.String("url", "", "RabbitMQ URL")
-	flag.Parse()
-	if *rabbitURL == "" {
-		log.Fatal("RabbitMQ URL must be specified with --url")
-	}
-	// regex to validate URL format
-	re := regexp.MustCompile(`^amqp://[^:]+:[^@]+@[^:]+:\d+/`)
-	if !re.MatchString(*rabbitURL) {
-		log.Fatal("RabbitMQ URL must match amqp://user:pass@host:port/")
-	}
-	return *rabbitURL
 }

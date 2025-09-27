@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"monitoring/internal/config"
 	"monitoring/internal/grpcserver"
@@ -22,9 +23,13 @@ func main() {
 
 	// start RabbitMQ consumer in a goroutine
 	rabbitURL := config.LoadConfig().RabbitURL
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go func() {
-		if err := server.StartMetricsConsumer(db, rabbitURL); err != nil {
-			log.Fatal(err)
+		if err := server.StartMetricsConsumer(ctx, db, rabbitURL); err != nil {
+			log.Fatal("Failed to start RabbitMQ consumer: ", err)
 		}
 	}()
 
@@ -43,6 +48,7 @@ func main() {
 		reflection.Register(grpcServer)
 
 		log.Println("gRPC server listening on :50051")
+
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Failed to serve gRPC server: %v", err)
 		}

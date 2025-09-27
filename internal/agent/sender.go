@@ -9,6 +9,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
+// send metrics to RabbitMQ
 func SendMetrics(metric models.ExtendedMetrics, server string) error {
 	// connect to RabbitMQ server
 	conn, err := amqp.Dial(server)

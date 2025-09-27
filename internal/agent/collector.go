@@ -14,6 +14,7 @@ import (
 	"github.com/shirou/gopsutil/v3/net"
 )
 
+// base metrics collection
 func CollectBaseMetrics() models.BaseMetrics {
 	// get hostname
 	hostname, err := os.Hostname()

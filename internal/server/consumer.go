@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -9,7 +10,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
+func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) error {
 	// connect to RabbitMQ server
 	conn, err := amqp.Dial(rabbitURL)
 	if err != nil {
@@ -19,6 +20,7 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	// declare a queue
 	q, err := ch.QueueDeclare(
@@ -32,6 +34,7 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 	if err != nil {
 		return err
 	}
+	defer ch.Close()
 
 	// subscribe to the queue
 	msgs, err := ch.Consume(
@@ -47,11 +50,22 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 		return err
 	}
 
-	// start a goroutine to process messages
-	go func() {
-		for d := range msgs {
-			var metric models.ExtendedMetrics
+	// process messages
+	log.Println("Started metrics consumer")
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Shutting down metrics consumer")
+			return nil
+		case d, ok := <-msgs:
+			if !ok {
+				log.Println("Message channel closed")
+				return nil
+			}
+
 			// decode message
+			var metric models.ExtendedMetrics
 			if err := json.Unmarshal(d.Body, &metric); err != nil {
 				log.Println("Failed to decode metric:", err)
 				d.Nack(false, false) // don't send to queue
@@ -66,10 +80,7 @@ func StartMetricsConsumer(db *sql.DB, rabbitURL string) error {
 			}
 
 			d.Ack(false) // acknowledge message
-			log.Printf("Metric seved from queue: %+v\n", metric)
+			log.Printf("Metric saved from queue: %+v\n", metric)
 		}
-	}()
-
-	log.Println("Started metrics consumer")
-	return nil
+	}
 }

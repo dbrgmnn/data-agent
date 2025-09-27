@@ -2,10 +2,13 @@ package agent
 
 import (
 	"context"
+	"flag"
 	"log"
+	"regexp"
 	"time"
 )
 
+// run the agent to collect and send metrics to RabbitMQ
 func Run(ctx context.Context, rabbitURL string) {
 	log.Println("Sending metrics to RabbitMQ:", rabbitURL)
 	for {
@@ -26,4 +29,19 @@ func Run(ctx context.Context, rabbitURL string) {
 
 		}
 	}
+}
+
+// parse flag --url
+func ParseFlags() string {
+	rabbitURL := flag.String("url", "", "RabbitMQ URL")
+	flag.Parse()
+	if *rabbitURL == "" {
+		log.Fatal("RabbitMQ URL must be specified with --url")
+	}
+	// regex to validate URL format
+	re := regexp.MustCompile(`^amqp://[^:]+:[^@]+@[^:]+:\d+/`)
+	if !re.MatchString(*rabbitURL) {
+		log.Fatal("RabbitMQ URL must match amqp://user:pass@host:port/")
+	}
+	return *rabbitURL
 }

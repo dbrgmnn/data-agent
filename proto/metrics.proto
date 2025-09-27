@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package monitoring;
+
+option go_package = "./internal/grpc;grpcserver";
+
+service MetricsService {
+    rpc GetLatestMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+    rpc GetMetricsByHost(GetMetricsByHostRequest) returns (GetMetricsResponse);
+}
+
+message GetMetricsRequest {
+    int32 limit = 1;
+}
+
+message GetMetricsByHostRequest {
+    string hostname = 1;
+    int32 limit = 2;
+}
+
+message Metric {
+    string hostname = 1;
+    string os = 2;
+    string platform = 3;
+    string platform_ver = 4;
+    string kernel_ver = 5;
+    int64 uptime = 6;
+    double cpu = 7;
+    double ram = 8;
+    string disk = 9;
+    string network = 10;
+    string time = 11;
+}
+
+message GetMetricsResponse {
+    repeated Metric metrics = 1;
+}

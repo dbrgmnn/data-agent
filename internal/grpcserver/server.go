@@ -32,12 +32,46 @@ func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *gen.GetMetric
 	}
 	defer rows.Close()
 
+	metrics, err := scanMetrics(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gen.GetMetricsResponse{Metrics: metrics}, nil
+}
+
+// retrieves metrics for a specific hostname from the database
+func (s *MetricsServer) GetMetricsByHost(ctx context.Context, req *gen.GetMetricsByHostRequest) (*gen.GetMetricsResponse, error) {
+	query := `SELECT id, hostname, os , platform, platform_ver,
+	kernel_ver, uptime, cpu, ram, disk::text, network::text, time
+	FROM metrics
+	WHERE hostname = $1
+	ORDER BY time DESC
+	LIMIT $2;
+	`
+	rows, err := s.DB.QueryContext(ctx, query, req.Hostname, req.Limit)
+	if err != nil {
+		return nil, fmt.Errorf("querying metrics by host: %w", err)
+	}
+	defer rows.Close()
+
+	metrics, err := scanMetrics(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gen.GetMetricsResponse{Metrics: metrics}, nil
+}
+
+// helper for scanning and unmarshaling a metric row
+func scanMetrics(rows *sql.Rows) ([]*gen.Metric, error) {
 	var metrics []*gen.Metric
 	for rows.Next() {
 		var m gen.Metric
 		var id int
 		var diskJSON, networkJSON string
 
+		// scan row into metric fields
 		if err := rows.Scan(&id, &m.Hostname, &m.Os, &m.Platform, &m.PlatformVer,
 			&m.KernelVer, &m.Uptime, &m.Cpu, &m.Ram, &diskJSON, &networkJSON, &m.Time); err != nil {
 			return nil, fmt.Errorf("scanning metric row: %w", err)
@@ -56,6 +90,5 @@ func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *gen.GetMetric
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("iterating metric rows: %w", err)
 	}
-
-	return &gen.GetMetricsResponse{Metrics: metrics}, nil
+	return metrics, nil
 }

@@ -6,6 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"monitoring/internal/grpcserver/gen"
+	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // implements the gRPC server for handling metrics-related requests
@@ -18,49 +22,67 @@ func NewMetricsServer(db *sql.DB) *MetricsServer {
 	return &MetricsServer{DB: db}
 }
 
-// retrieves the latest metrics from the database
-func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *gen.GetMetricsRequest) (*gen.GetMetricsResponse, error) {
+// retrieves a list of metrics with optional filtering by hostname and time range, and supports pagination
+func (s *MetricsServer) ListMetrics(ctx context.Context, req *gen.ListMetricsRequest) (*gen.ListMetricsResponse, error) {
 	query := `SELECT id, hostname, os, platform, platform_ver,
 	kernel_ver, uptime, cpu, ram, disk::text, network::text, time
 	FROM metrics
-	ORDER BY time DESC
-	LIMIT $1;
-	`
-	rows, err := s.DB.QueryContext(ctx, query, req.Limit)
-	if err != nil {
-		return nil, fmt.Errorf("querying latest metrics: %w", err)
-	}
-	defer rows.Close()
-
-	metrics, err := scanMetrics(rows)
-	if err != nil {
-		return nil, err
-	}
-
-	return &gen.GetMetricsResponse{Metrics: metrics}, nil
-}
-
-// retrieves metrics for a specific hostname from the database
-func (s *MetricsServer) GetMetricsByHost(ctx context.Context, req *gen.GetMetricsByHostRequest) (*gen.GetMetricsResponse, error) {
-	query := `SELECT id, hostname, os , platform, platform_ver,
-	kernel_ver, uptime, cpu, ram, disk::text, network::text, time
-	FROM metrics
 	WHERE hostname = $1
+	  AND ($2::timestamptz IS NULL OR time >= $2::timestamptz)
+	  AND ($3::timestamptz IS NULL OR time <= $3::timestamptz)
 	ORDER BY time DESC
-	LIMIT $2;
+	LIMIT $4
+	OFFSET $5;
 	`
-	rows, err := s.DB.QueryContext(ctx, query, req.Hostname, req.Limit)
+
+	// validate required hostname parameter
+	if req.Hostname == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "hostname is required")
+	}
+
+	// parse optional time parameters
+	var fromTime, toTime sql.NullTime
+	if req.FromTime != "" {
+		parsedTime, err := time.Parse(time.RFC3339, req.FromTime)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid from_time format: %v", err)
+		}
+		fromTime = sql.NullTime{Time: parsedTime, Valid: true}
+	}
+	if req.ToTime != "" {
+		parsedTime, err := time.Parse(time.RFC3339, req.ToTime)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid to_time format: %v", err)
+		}
+		toTime = sql.NullTime{Time: parsedTime, Valid: true}
+	}
+
+	// set default limit
+	limit := int32(10)
+	if req.Limit > 0 {
+		limit = req.Limit
+	}
+
+	// set default offset
+	offset := int32(0)
+	if req.Offset > 0 {
+		offset = req.Offset
+	}
+
+	// execute query with parameters
+	rows, err := s.DB.QueryContext(ctx, query, req.Hostname, fromTime, toTime, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("querying metrics by host: %w", err)
+		return nil, status.Errorf(codes.Internal, "querying metrics: %v", err)
 	}
 	defer rows.Close()
 
+	// scan rows into Metric structs
 	metrics, err := scanMetrics(rows)
 	if err != nil {
 		return nil, err
 	}
 
-	return &gen.GetMetricsResponse{Metrics: metrics}, nil
+	return &gen.ListMetricsResponse{Metrics: metrics}, nil
 }
 
 // helper for scanning and unmarshaling a metric row

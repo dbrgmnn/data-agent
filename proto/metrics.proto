@@ -6,6 +6,8 @@ option go_package = "monitoring/internal/grpcserver/gen;gen";
 
 service MetricsService {
     rpc ListMetrics(ListMetricsRequest) returns (ListMetricsResponse);
+    rpc GetLatestMetrics(GetLatestMetricsRequest) returns (GetLatestMetricsResponse);
+    rpc GetMetricsByHost(GetMetricsByHostRequest) returns (ListMetricsResponse);
 }
 
 message ListMetricsRequest {
@@ -14,6 +16,22 @@ message ListMetricsRequest {
     string to_time = 3;
     int32 limit = 4;
     int32 offset = 5;
+}
+
+message ListMetricsResponse {
+    repeated Metric metrics = 1;
+}
+
+message GetLatestMetricsRequest {
+    string hostname = 1;
+}
+
+message GetLatestMetricsResponse {
+    repeated Metric metrics = 1;
+}
+
+message GetMetricsByHostRequest {
+    string hostname = 1;
 }
 
 message DiskMetric {
@@ -48,8 +66,4 @@ message Metric {
     repeated DiskMetric disk = 9;
     repeated NetworkMetric network = 10;
     string time = 11;
-}
-
-message ListMetricsResponse {
-    repeated Metric metrics = 1;
 }

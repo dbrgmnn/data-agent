@@ -12,6 +12,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const baseSelect = `SELECT id, hostname, os, platform, platform_ver,
+    kernel_ver, uptime, cpu, ram, disk::text, network::text, time
+	FROM metrics 
+	`
+
 // implements the gRPC server for handling metrics-related requests
 type MetricsServer struct {
 	gen.UnimplementedMetricsServiceServer
@@ -24,10 +29,8 @@ func NewMetricsServer(db *sql.DB) *MetricsServer {
 
 // retrieves a list of metrics with optional filtering by hostname and time range, and supports pagination
 func (s *MetricsServer) ListMetrics(ctx context.Context, req *gen.ListMetricsRequest) (*gen.ListMetricsResponse, error) {
-	query := `SELECT id, hostname, os, platform, platform_ver,
-	kernel_ver, uptime, cpu, ram, disk::text, network::text, time
-	FROM metrics
-	WHERE hostname = $1
+	query := baseSelect +
+		`WHERE hostname = $1
 	  AND ($2::timestamptz IS NULL OR time >= $2::timestamptz)
 	  AND ($3::timestamptz IS NULL OR time <= $3::timestamptz)
 	ORDER BY time DESC
@@ -85,6 +88,62 @@ func (s *MetricsServer) ListMetrics(ctx context.Context, req *gen.ListMetricsReq
 	return &gen.ListMetricsResponse{Metrics: metrics}, nil
 }
 
+// placeholder for retrieving the latest metric for a specific hostname
+func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *gen.GetLatestMetricsRequest) (*gen.GetLatestMetricsResponse, error) {
+	query := baseSelect +
+		`WHERE hostname = $1
+	ORDER BY time DESC
+	LIMIT 1;
+	`
+
+	// validate required hostname parameter
+	if req.Hostname == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "hostname is required")
+	}
+
+	// execute query with parameters
+	rows, err := s.DB.QueryContext(ctx, query, req.Hostname)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "querying latest metric: %v", err)
+	}
+	defer rows.Close()
+
+	// scan rows into Metric structs
+	metrics, err := scanMetrics(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gen.GetLatestMetricsResponse{Metrics: metrics}, nil
+}
+
+func (s *MetricsServer) GetMetricsByHost(ctx context.Context, req *gen.GetMetricsByHostRequest) (*gen.ListMetricsResponse, error) {
+	query := baseSelect +
+		`WHERE hostname = $1
+	ORDER BY time DESC;
+	`
+
+	// validate required hostname parameter
+	if req.Hostname == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "hostname is required")
+	}
+
+	// execute query with parameters
+	rows, err := s.DB.QueryContext(ctx, query, req.Hostname)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "querying metrics by host: %v", err)
+	}
+	defer rows.Close()
+
+	// scan rows into Metric structs
+	metrics, err := scanMetrics(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gen.ListMetricsResponse{Metrics: metrics}, nil
+}
+
 // helper for scanning and unmarshaling a metric row
 func scanMetrics(rows *sql.Rows) ([]*gen.Metric, error) {
 	var metrics []*gen.Metric
@@ -96,15 +155,15 @@ func scanMetrics(rows *sql.Rows) ([]*gen.Metric, error) {
 		// scan row into metric fields
 		if err := rows.Scan(&id, &m.Hostname, &m.Os, &m.Platform, &m.PlatformVer,
 			&m.KernelVer, &m.Uptime, &m.Cpu, &m.Ram, &diskJSON, &networkJSON, &m.Time); err != nil {
-			return nil, fmt.Errorf("scanning metric row: %w", err)
+			return nil, status.Errorf(codes.Internal, "scanning metric row: %v", err)
 		}
 
 		// unmarshal JSON fields
 		if err := json.Unmarshal([]byte(diskJSON), &m.Disk); err != nil {
-			return nil, fmt.Errorf("unmarshaling disk JSON: %w", err)
+			return nil, status.Errorf(codes.Internal, "unmarshaling disk JSON: %v", err)
 		}
 		if err := json.Unmarshal([]byte(networkJSON), &m.Network); err != nil {
-			return nil, fmt.Errorf("unmarshaling network JSON: %w", err)
+			return nil, status.Errorf(codes.Internal, "unmarshaling network JSON: %v", err)
 		}
 
 		metrics = append(metrics, &m)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"monitoring/internal/grpcserver/gen"
 	"time"
 
@@ -29,13 +28,13 @@ func NewMetricsServer(db *sql.DB) *MetricsServer {
 
 // retrieves a list of metrics with optional filtering by hostname and time range, and supports pagination
 func (s *MetricsServer) ListMetrics(ctx context.Context, req *gen.ListMetricsRequest) (*gen.ListMetricsResponse, error) {
-	query := baseSelect +
-		`WHERE hostname = $1
-	  AND ($2::timestamptz IS NULL OR time >= $2::timestamptz)
-	  AND ($3::timestamptz IS NULL OR time <= $3::timestamptz)
-	ORDER BY time DESC
-	LIMIT $4
-	OFFSET $5;
+	query := baseSelect + `
+		WHERE hostname = $1
+	  		AND ($2::timestamptz IS NULL OR time >= $2::timestamptz)
+	  		AND ($3::timestamptz IS NULL OR time <= $3::timestamptz)
+		ORDER BY time DESC
+		LIMIT $4
+		OFFSET $5;
 	`
 
 	// validate required hostname parameter
@@ -73,14 +72,7 @@ func (s *MetricsServer) ListMetrics(ctx context.Context, req *gen.ListMetricsReq
 	}
 
 	// execute query with parameters
-	rows, err := s.DB.QueryContext(ctx, query, req.Hostname, fromTime, toTime, limit, offset)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "querying metrics: %v", err)
-	}
-	defer rows.Close()
-
-	// scan rows into Metric structs
-	metrics, err := scanMetrics(rows)
+	metrics, err := s.queryMetrics(ctx, query, req.Hostname, fromTime, toTime, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -90,10 +82,10 @@ func (s *MetricsServer) ListMetrics(ctx context.Context, req *gen.ListMetricsReq
 
 // placeholder for retrieving the latest metric for a specific hostname
 func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *gen.GetLatestMetricsRequest) (*gen.GetLatestMetricsResponse, error) {
-	query := baseSelect +
-		`WHERE hostname = $1
-	ORDER BY time DESC
-	LIMIT 1;
+	query := baseSelect + `
+		WHERE hostname = $1
+		ORDER BY time DESC
+		LIMIT 1;
 	`
 
 	// validate required hostname parameter
@@ -102,14 +94,7 @@ func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *gen.GetLatest
 	}
 
 	// execute query with parameters
-	rows, err := s.DB.QueryContext(ctx, query, req.Hostname)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "querying latest metric: %v", err)
-	}
-	defer rows.Close()
-
-	// scan rows into Metric structs
-	metrics, err := scanMetrics(rows)
+	metrics, err := s.queryMetrics(ctx, query, req.Hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -118,9 +103,9 @@ func (s *MetricsServer) GetLatestMetrics(ctx context.Context, req *gen.GetLatest
 }
 
 func (s *MetricsServer) GetMetricsByHost(ctx context.Context, req *gen.GetMetricsByHostRequest) (*gen.ListMetricsResponse, error) {
-	query := baseSelect +
-		`WHERE hostname = $1
-	ORDER BY time DESC;
+	query := baseSelect + `
+		WHERE hostname = $1
+		ORDER BY time DESC;
 	`
 
 	// validate required hostname parameter
@@ -129,14 +114,7 @@ func (s *MetricsServer) GetMetricsByHost(ctx context.Context, req *gen.GetMetric
 	}
 
 	// execute query with parameters
-	rows, err := s.DB.QueryContext(ctx, query, req.Hostname)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "querying metrics by host: %v", err)
-	}
-	defer rows.Close()
-
-	// scan rows into Metric structs
-	metrics, err := scanMetrics(rows)
+	metrics, err := s.queryMetrics(ctx, query, req.Hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +147,24 @@ func scanMetrics(rows *sql.Rows) ([]*gen.Metric, error) {
 		metrics = append(metrics, &m)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating metric rows: %w", err)
+		return nil, status.Errorf(codes.Internal, "iterating metric rows: %v", err)
 	}
+	return metrics, nil
+}
+
+// helper for querying metris
+func (s *MetricsServer) queryMetrics(ctx context.Context, query string, args ...any) ([]*gen.Metric, error) {
+	rows, err := s.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "querying metrics: %v", err)
+	}
+	defer rows.Close()
+
+	// scan rows into Metric structs
+	metrics, err := scanMetrics(rows)
+	if err != nil {
+		return nil, err
+	}
+
 	return metrics, nil
 }

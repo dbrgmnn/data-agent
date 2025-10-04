@@ -5,12 +5,12 @@ package monitoring;
 option go_package = "monitoring/internal/grpcserver/gen;gen";
 
 service MetricsService {
-    rpc ListMetrics(ListMetricsRequest) returns (ListMetricsResponse);
+    rpc GetListMetrics(GetListMetricsRequest) returns (GetListMetricsResponse);
     rpc GetLatestMetrics(GetLatestMetricsRequest) returns (GetLatestMetricsResponse);
-    rpc GetMetricsByHost(GetMetricsByHostRequest) returns (ListMetricsResponse);
+    rpc GetMetricsByHost(GetMetricsByHostRequest) returns (GetMetricsByHostResponse);
 }
 
-message ListMetricsRequest {
+message GetListMetricsRequest {
     string hostname = 1;
     string from_time = 2;
     string to_time = 3;
@@ -18,7 +18,7 @@ message ListMetricsRequest {
     int32 offset = 5;
 }
 
-message ListMetricsResponse {
+message GetListMetricsResponse {
     repeated Metric metrics = 1;
 }
 
@@ -27,11 +27,15 @@ message GetLatestMetricsRequest {
 }
 
 message GetLatestMetricsResponse {
-    repeated Metric metrics = 1;
+    Metric metrics = 1;
 }
 
 message GetMetricsByHostRequest {
     string hostname = 1;
+}
+
+message GetMetricsByHostResponse {
+    repeated Metric metrics = 1;
 }
 
 message DiskMetric {

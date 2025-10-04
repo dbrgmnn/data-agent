@@ -41,7 +41,8 @@ func main() {
 		}
 
 		grpcServer := grpc.NewServer()
-		metricsServer := grpcserver.NewMetricsServer(db)
+		repo := grpcserver.NewRepository(db)
+		metricsServer := grpcserver.NewMetricsServer(repo)
 		pb.RegisterMetricsServiceServer(grpcServer, metricsServer)
 
 		// register reflection service on gRPC server

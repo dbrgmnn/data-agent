@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MetricsService_ListMetrics_FullMethodName      = "/monitoring.MetricsService/ListMetrics"
+	MetricsService_GetListMetrics_FullMethodName   = "/monitoring.MetricsService/GetListMetrics"
 	MetricsService_GetLatestMetrics_FullMethodName = "/monitoring.MetricsService/GetLatestMetrics"
 	MetricsService_GetMetricsByHost_FullMethodName = "/monitoring.MetricsService/GetMetricsByHost"
 )
@@ -28,9 +28,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MetricsServiceClient interface {
-	ListMetrics(ctx context.Context, in *ListMetricsRequest, opts ...grpc.CallOption) (*ListMetricsResponse, error)
+	GetListMetrics(ctx context.Context, in *GetListMetricsRequest, opts ...grpc.CallOption) (*GetListMetricsResponse, error)
 	GetLatestMetrics(ctx context.Context, in *GetLatestMetricsRequest, opts ...grpc.CallOption) (*GetLatestMetricsResponse, error)
-	GetMetricsByHost(ctx context.Context, in *GetMetricsByHostRequest, opts ...grpc.CallOption) (*ListMetricsResponse, error)
+	GetMetricsByHost(ctx context.Context, in *GetMetricsByHostRequest, opts ...grpc.CallOption) (*GetMetricsByHostResponse, error)
 }
 
 type metricsServiceClient struct {
@@ -41,9 +41,9 @@ func NewMetricsServiceClient(cc grpc.ClientConnInterface) MetricsServiceClient {
 	return &metricsServiceClient{cc}
 }
 
-func (c *metricsServiceClient) ListMetrics(ctx context.Context, in *ListMetricsRequest, opts ...grpc.CallOption) (*ListMetricsResponse, error) {
-	out := new(ListMetricsResponse)
-	err := c.cc.Invoke(ctx, MetricsService_ListMetrics_FullMethodName, in, out, opts...)
+func (c *metricsServiceClient) GetListMetrics(ctx context.Context, in *GetListMetricsRequest, opts ...grpc.CallOption) (*GetListMetricsResponse, error) {
+	out := new(GetListMetricsResponse)
+	err := c.cc.Invoke(ctx, MetricsService_GetListMetrics_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +59,8 @@ func (c *metricsServiceClient) GetLatestMetrics(ctx context.Context, in *GetLate
 	return out, nil
 }
 
-func (c *metricsServiceClient) GetMetricsByHost(ctx context.Context, in *GetMetricsByHostRequest, opts ...grpc.CallOption) (*ListMetricsResponse, error) {
-	out := new(ListMetricsResponse)
+func (c *metricsServiceClient) GetMetricsByHost(ctx context.Context, in *GetMetricsByHostRequest, opts ...grpc.CallOption) (*GetMetricsByHostResponse, error) {
+	out := new(GetMetricsByHostResponse)
 	err := c.cc.Invoke(ctx, MetricsService_GetMetricsByHost_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -72,9 +72,9 @@ func (c *metricsServiceClient) GetMetricsByHost(ctx context.Context, in *GetMetr
 // All implementations must embed UnimplementedMetricsServiceServer
 // for forward compatibility
 type MetricsServiceServer interface {
-	ListMetrics(context.Context, *ListMetricsRequest) (*ListMetricsResponse, error)
+	GetListMetrics(context.Context, *GetListMetricsRequest) (*GetListMetricsResponse, error)
 	GetLatestMetrics(context.Context, *GetLatestMetricsRequest) (*GetLatestMetricsResponse, error)
-	GetMetricsByHost(context.Context, *GetMetricsByHostRequest) (*ListMetricsResponse, error)
+	GetMetricsByHost(context.Context, *GetMetricsByHostRequest) (*GetMetricsByHostResponse, error)
 	mustEmbedUnimplementedMetricsServiceServer()
 }
 
@@ -82,13 +82,13 @@ type MetricsServiceServer interface {
 type UnimplementedMetricsServiceServer struct {
 }
 
-func (UnimplementedMetricsServiceServer) ListMetrics(context.Context, *ListMetricsRequest) (*ListMetricsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListMetrics not implemented")
+func (UnimplementedMetricsServiceServer) GetListMetrics(context.Context, *GetListMetricsRequest) (*GetListMetricsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetListMetrics not implemented")
 }
 func (UnimplementedMetricsServiceServer) GetLatestMetrics(context.Context, *GetLatestMetricsRequest) (*GetLatestMetricsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLatestMetrics not implemented")
 }
-func (UnimplementedMetricsServiceServer) GetMetricsByHost(context.Context, *GetMetricsByHostRequest) (*ListMetricsResponse, error) {
+func (UnimplementedMetricsServiceServer) GetMetricsByHost(context.Context, *GetMetricsByHostRequest) (*GetMetricsByHostResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMetricsByHost not implemented")
 }
 func (UnimplementedMetricsServiceServer) mustEmbedUnimplementedMetricsServiceServer() {}
@@ -104,20 +104,20 @@ func RegisterMetricsServiceServer(s grpc.ServiceRegistrar, srv MetricsServiceSer
 	s.RegisterService(&MetricsService_ServiceDesc, srv)
 }
 
-func _MetricsService_ListMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListMetricsRequest)
+func _MetricsService_GetListMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetListMetricsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MetricsServiceServer).ListMetrics(ctx, in)
+		return srv.(MetricsServiceServer).GetListMetrics(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MetricsService_ListMetrics_FullMethodName,
+		FullMethod: MetricsService_GetListMetrics_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MetricsServiceServer).ListMetrics(ctx, req.(*ListMetricsRequest))
+		return srv.(MetricsServiceServer).GetListMetrics(ctx, req.(*GetListMetricsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -166,8 +166,8 @@ var MetricsService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MetricsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListMetrics",
-			Handler:    _MetricsService_ListMetrics_Handler,
+			MethodName: "GetListMetrics",
+			Handler:    _MetricsService_GetListMetrics_Handler,
 		},
 		{
 			MethodName: "GetLatestMetrics",

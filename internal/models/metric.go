@@ -2,21 +2,30 @@ package models
 
 import "time"
 
+// represents a monitored host system
+type Host struct {
+	ID          int64  `json:"id"`
+	Hostname    string `json:"hostname"`
+	OS          string `json:"os"`
+	Platform    string `json:"platform"`
+	PlatformVer string `json:"platformver"`
+	KernelVer   string `json:"kernelver"`
+}
+
 // base metrics for all systems
-type BaseMetrics struct {
-	Hostname    string    `json:"hostname"`
-	OS          string    `json:"os"`
-	Platform    string    `json:"platform"`
-	PlatformVer string    `json:"platformver"`
-	KernelVer   string    `json:"kernelver"`
-	Uptime      uint64    `json:"uptime"`
-	CPU         float64   `json:"cpu"`
-	RAM         float64   `json:"ram"`
-	Time        time.Time `json:"time"`
+type Metric struct {
+	ID      int64        `json:"id"`
+	HostID  int64        `json:"host_id"`
+	Uptime  uint64       `json:"uptime"`
+	CPU     float64      `json:"cpu"`
+	RAM     float64      `json:"ram"`
+	Disk    []DiskMetric `json:"disk,omitempty"`
+	Network []NetMetric  `json:"network,omitempty"`
+	Time    time.Time    `json:"time"`
 }
 
 // metrics for disk usage
-type DiskMetrics struct {
+type DiskMetric struct {
 	Path        string  `json:"path"`
 	Total       uint64  `json:"total"`
 	Used        uint64  `json:"used"`
@@ -25,7 +34,7 @@ type DiskMetrics struct {
 }
 
 // metrics for network usage
-type NetMetrics struct {
+type NetMetric struct {
 	Name        string `json:"name"`
 	BytesSent   uint64 `json:"bytes_sent"`
 	BytesRecv   uint64 `json:"bytes_recv"`
@@ -37,9 +46,8 @@ type NetMetrics struct {
 	DropOut     uint64 `json:"drop_out"`
 }
 
-// extended metrics for sending
-type ExtendedMetrics struct {
-	BaseMetrics
-	DiskMetrics []DiskMetrics `json:"disk,omitempty"`
-	NetMetrics  []NetMetrics  `json:"network,omitempty"`
+// extended metrics including host details
+type MetricMessage struct {
+	Host   Host   `json:"host"`
+	Metric Metric `json:"metric"`
 }

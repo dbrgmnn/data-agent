@@ -14,8 +14,8 @@ import (
 	"github.com/shirou/gopsutil/v3/net"
 )
 
-// base metrics collection
-func CollectBaseMetrics() models.BaseMetrics {
+// collect host information
+func CollectHostInfo() models.Host {
 	// get hostname
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -27,14 +27,28 @@ func CollectBaseMetrics() models.BaseMetrics {
 	if err != nil {
 		log.Println("host.Info error:", err)
 	}
-	var uptime uint64
 	var os, platform, platformVer, kernelVer string
 	if hostInfo != nil {
 		os = hostInfo.OS
 		platform = hostInfo.Platform
 		platformVer = hostInfo.PlatformVersion
 		kernelVer = hostInfo.KernelVersion
-		uptime = hostInfo.Uptime
+	}
+	return models.Host{
+		Hostname:    hostname,
+		OS:          os,
+		Platform:    platform,
+		PlatformVer: platformVer,
+		KernelVer:   kernelVer,
+	}
+}
+
+// base metrics collection
+func CollectMetricInfo() models.Metric {
+	// get uptime
+	uptime, err := host.Uptime()
+	if err != nil {
+		log.Println("host.Uptime error:", err)
 	}
 
 	// get CPU info
@@ -57,33 +71,39 @@ func CollectBaseMetrics() models.BaseMetrics {
 		memPercent = memInfo.UsedPercent
 	}
 
-	return models.BaseMetrics{
-		Hostname:    hostname,
-		OS:          os,
-		Platform:    platform,
-		PlatformVer: platformVer,
-		KernelVer:   kernelVer,
-		Uptime:      uptime,
-		CPU:         cpuUsage,
-		RAM:         memPercent,
-		Time:        time.Now(),
+	diskMetric, err := CollectDiskMetric()
+	if err != nil {
+		log.Println("CollectDiskMetric error:", err)
+	}
+	netMetric, err := CollectNetMetric()
+	if err != nil {
+		log.Println("CollectNetMetric error:", err)
+	}
+
+	return models.Metric{
+		Uptime:  uptime,
+		CPU:     cpuUsage,
+		RAM:     memPercent,
+		Disk:    diskMetric,
+		Network: netMetric,
+		Time:    time.Now(),
 	}
 }
 
 // disk metrics collection
-func CollectDiskMetrics() ([]models.DiskMetrics, error) {
+func CollectDiskMetric() ([]models.DiskMetric, error) {
 	partitions, err := disk.Partitions(true)
 	if err != nil {
 		return nil, err
 	}
 
-	var metrics []models.DiskMetrics
+	var metrics []models.DiskMetric
 	for _, p := range partitions {
 		usage, err := disk.Usage(p.Mountpoint)
 		if err != nil {
 			continue
 		}
-		metrics = append(metrics, models.DiskMetrics{
+		metrics = append(metrics, models.DiskMetric{
 			Path:        p.Mountpoint,
 			Total:       usage.Total,
 			Used:        usage.Used,
@@ -95,14 +115,14 @@ func CollectDiskMetrics() ([]models.DiskMetrics, error) {
 }
 
 // network metrics collection
-func CollectNetMetrics() ([]models.NetMetrics, error) {
+func CollectNetMetric() ([]models.NetMetric, error) {
 	counters, err := net.IOCounters(true)
 	if err != nil {
 		return nil, err
 	}
-	var metrics []models.NetMetrics
+	var metrics []models.NetMetric
 	for _, c := range counters {
-		metrics = append(metrics, models.NetMetrics{
+		metrics = append(metrics, models.NetMetric{
 			Name:        c.Name,
 			BytesSent:   c.BytesSent,
 			BytesRecv:   c.BytesRecv,
@@ -115,16 +135,4 @@ func CollectNetMetrics() ([]models.NetMetrics, error) {
 		})
 	}
 	return metrics, nil
-}
-
-// collect all metrics
-func CollectAllMetrics(base models.BaseMetrics) models.ExtendedMetrics {
-	diskMetrics, _ := CollectDiskMetrics()
-	netMetrics, _ := CollectNetMetrics()
-
-	return models.ExtendedMetrics{
-		BaseMetrics: base,
-		DiskMetrics: diskMetrics,
-		NetMetrics:  netMetrics,
-	}
 }

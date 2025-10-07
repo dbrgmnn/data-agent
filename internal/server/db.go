@@ -32,6 +32,7 @@ func InitDB() (*sql.DB, error) {
 	// test connection
 	err = db.Ping()
 	if err != nil {
+		db.Close()
 		log.Printf("Error connecting to the database: %v\n", err)
 		return nil, err
 	}
@@ -40,28 +41,57 @@ func InitDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func SaveMetric(db *sql.DB, metric models.ExtendedMetrics) error {
-	// serialize complex types to JSON
-	diskJSON, _ := json.Marshal(metric.DiskMetrics)
-	netJSON, _ := json.Marshal(metric.NetMetrics)
+// insert host info into database
+func SaveHostInfo(db *sql.DB, metric *models.MetricMessage) error {
+	var HostID int64
 
-	// insert metric into database
-	_, err := db.Exec(
-		`INSERT INTO metrics (hostname, os, platform, platform_ver, kernel_ver, uptime, cpu, ram, disk, network, time) 
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		metric.Hostname,
-		metric.OS,
-		metric.Platform,
-		metric.PlatformVer,
-		metric.KernelVer,
-		metric.Uptime,
-		metric.CPU,
-		metric.RAM,
+	err := db.QueryRow(
+		`INSERT INTO hosts (hostname, os, platform, platform_ver, kernel_ver) 
+		 VALUES ($1, $2, $3, $4, $5)
+		 ON CONFLICT (hostname) DO UPDATE SET
+		   os = EXCLUDED.os,
+		   platform = EXCLUDED.platform,
+		   platform_ver = EXCLUDED.platform_ver,
+		   kernel_ver = EXCLUDED.kernel_ver
+		 RETURNING id`,
+		metric.Host.Hostname,
+		metric.Host.OS,
+		metric.Host.Platform,
+		metric.Host.PlatformVer,
+		metric.Host.KernelVer,
+	).Scan(&HostID)
+
+	if err != nil {
+		log.Printf("Error inserting host info: %v\n", err)
+		return err
+	}
+
+	metric.Metric.HostID = HostID
+	return nil
+}
+
+// insert metric into database
+func SaveMetric(db *sql.DB, metric models.MetricMessage) error {
+	// marshaling disk and network slices to JSON
+	diskJSON, err := json.Marshal(metric.Metric.Disk)
+	if err != nil {
+		return fmt.Errorf("error marshaling disk metrics: %v", err)
+	}
+	networkJSON, err := json.Marshal(metric.Metric.Network)
+	if err != nil {
+		return fmt.Errorf("error marshaling network metrics: %v", err)
+	}
+	_, err = db.Exec(
+		`INSERT INTO metrics (host_id, uptime, cpu, ram, disk, network, time)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		metric.Metric.HostID,
+		metric.Metric.Uptime,
+		metric.Metric.CPU,
+		metric.Metric.RAM,
 		diskJSON,
-		netJSON,
-		metric.Time,
+		networkJSON,
+		metric.Metric.Time,
 	)
-
 	if err != nil {
 		log.Printf("Error inserting metric: %v\n", err)
 	}

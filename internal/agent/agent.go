@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"monitoring/internal/models"
 	"regexp"
 	"time"
 )
@@ -19,9 +20,11 @@ func Run(ctx context.Context, rabbitURL string) {
 			return
 		default:
 			// collect and send metrics every 5 seconds
-			base := CollectBaseMetrics()
-			metric := CollectAllMetrics(base)
-			err := SendMetrics(metric, rabbitURL)
+			allMetric := models.MetricMessage{
+				Host:   CollectHostInfo(),
+				Metric: CollectMetricInfo(),
+			}
+			err := SendMetrics(allMetric, rabbitURL)
 			if err != nil {
 				log.Println("Failed to send metrics:", err)
 			}

@@ -16,11 +16,13 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
+
 	ch, err := conn.Channel()
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer ch.Close()
 
 	// declare a queue
 	q, err := ch.QueueDeclare(
@@ -34,7 +36,6 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 	if err != nil {
 		return err
 	}
-	defer ch.Close()
 
 	// subscribe to the queue
 	msgs, err := ch.Consume(
@@ -65,7 +66,7 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 			}
 
 			// decode message
-			var metric models.ExtendedMetrics
+			var metric models.MetricMessage
 			if err := json.Unmarshal(d.Body, &metric); err != nil {
 				log.Println("Failed to decode metric:", err)
 				d.Nack(false, false) // don't send to queue
@@ -73,6 +74,11 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 			}
 
 			// send metric to database
+			if err := SaveHostInfo(db, &metric); err != nil {
+				log.Println("Failed to save host info:", err)
+				d.Nack(false, true) // send to queue again
+				continue
+			}
 			if err := SaveMetric(db, metric); err != nil {
 				log.Println("Failed to save metric:", err)
 				d.Nack(false, true) // send to queue again

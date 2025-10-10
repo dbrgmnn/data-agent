@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS hosts (
 
 CREATE TABLE IF NOT EXISTS metrics (
     id SERIAL PRIMARY KEY,
-    host_id INT REFERENCES hosts(id) ON DELETE CASCADE,
+    host_id BIGINT REFERENCES hosts(id) ON DELETE CASCADE,
     uptime BIGINT,
     cpu NUMERIC,
     ram NUMERIC,

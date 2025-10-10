@@ -41,37 +41,37 @@ func InitDB() (*sql.DB, error) {
 	return db, nil
 }
 
-// insert host info into database
-func SaveHostInfo(db *sql.DB, metric *models.MetricMessage) error {
-	var HostID int64
+// insert host and metric into database
+func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
+	var hostID int64
 
-	err := db.QueryRow(
-		`INSERT INTO hosts (hostname, os, platform, platform_ver, kernel_ver) 
-		 VALUES ($1, $2, $3, $4, $5)
-		 ON CONFLICT (hostname) DO UPDATE SET
-		   os = EXCLUDED.os,
-		   platform = EXCLUDED.platform,
-		   platform_ver = EXCLUDED.platform_ver,
-		   kernel_ver = EXCLUDED.kernel_ver
-		 RETURNING id`,
-		metric.Host.Hostname,
-		metric.Host.OS,
-		metric.Host.Platform,
-		metric.Host.PlatformVer,
-		metric.Host.KernelVer,
-	).Scan(&HostID)
+	err := db.QueryRow("SELECT id FROM hosts WHERE hostname=$1", metric.Host.Hostname).Scan(&hostID)
+	if err == sql.ErrNoRows {
 
-	if err != nil {
-		log.Printf("Error inserting host info: %v\n", err)
+		// insert host into database when not exists
+		err := db.QueryRow(
+			`INSERT INTO hosts (hostname, os, platform, platform_ver, kernel_ver) 
+			VALUES ($1, $2, $3, $4, $5)
+			RETURNING id`,
+			metric.Host.Hostname,
+			metric.Host.OS,
+			metric.Host.Platform,
+			metric.Host.PlatformVer,
+			metric.Host.KernelVer,
+		).Scan(&hostID)
+
+		if err != nil {
+			log.Printf("Error inserting host info: %v\n", err)
+			return err
+		}
+	} else if err != nil {
+		log.Printf("error selecting host_id: %v", err)
 		return err
 	}
 
-	metric.Metric.HostID = HostID
-	return nil
-}
+	// set host_id in metric
+	metric.Metric.HostID = hostID
 
-// insert metric into database
-func SaveMetric(db *sql.DB, metric models.MetricMessage) error {
 	// marshaling disk and network slices to JSON
 	diskJSON, err := json.Marshal(metric.Metric.Disk)
 	if err != nil {
@@ -81,6 +81,7 @@ func SaveMetric(db *sql.DB, metric models.MetricMessage) error {
 	if err != nil {
 		return fmt.Errorf("error marshaling network metrics: %v", err)
 	}
+	// insert metric into database
 	_, err = db.Exec(
 		`INSERT INTO metrics (host_id, uptime, cpu, ram, disk, network, time)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
@@ -94,7 +95,8 @@ func SaveMetric(db *sql.DB, metric models.MetricMessage) error {
 	)
 	if err != nil {
 		log.Printf("Error inserting metric: %v\n", err)
+		return err
 	}
 
-	return err
+	return nil
 }

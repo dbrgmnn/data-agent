@@ -74,12 +74,7 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 			}
 
 			// send metric to database
-			if err := SaveHostInfo(db, &metric); err != nil {
-				log.Println("Failed to save host info:", err)
-				d.Nack(false, true) // send to queue again
-				continue
-			}
-			if err := SaveMetric(db, metric); err != nil {
+			if err := SaveMetric(db, &metric); err != nil {
 				log.Println("Failed to save metric:", err)
 				d.Nack(false, true) // send to queue again
 				continue

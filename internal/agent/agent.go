@@ -20,16 +20,14 @@ func Run(ctx context.Context, rabbitURL string) {
 			return
 		default:
 			// collect and send metrics every 5 seconds
-			allMetric := models.MetricMessage{
+			metricMsg := models.MetricMessage{
 				Host:   CollectHostInfo(),
 				Metric: CollectMetricInfo(),
 			}
-			err := SendMetrics(allMetric, rabbitURL)
-			if err != nil {
+			if err := SendMetrics(&metricMsg, rabbitURL); err != nil {
 				log.Println("Failed to send metrics:", err)
 			}
-			time.Sleep(5 * time.Second)
-
+			time.Sleep(2 * time.Second)
 		}
 	}
 }

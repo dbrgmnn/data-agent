@@ -10,7 +10,7 @@ import (
 )
 
 // send metrics to RabbitMQ
-func SendMetrics(allMetric models.MetricMessage, server string) error {
+func SendMetrics(metricMsg *models.MetricMessage, server string) error {
 	// connect to RabbitMQ server
 	conn, err := amqp.Dial(server)
 	if err != nil {
@@ -38,7 +38,7 @@ func SendMetrics(allMetric models.MetricMessage, server string) error {
 	}
 
 	// serialize metric to JSON
-	body, err := json.Marshal(allMetric)
+	body, err := json.Marshal(metricMsg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal metric: %w", err)
 	}
@@ -59,6 +59,6 @@ func SendMetrics(allMetric models.MetricMessage, server string) error {
 		return fmt.Errorf("failed to publish a message: %w", err)
 	}
 
-	log.Printf("Metric sent to queue: %+v\n", allMetric)
+	log.Printf("Metric sent to queue: %+v\n", metricMsg)
 	return nil
 }

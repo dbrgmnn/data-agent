@@ -4,9 +4,10 @@ import (
 	"context"
 	"log"
 	"monitoring/internal/config"
+	initDB "monitoring/internal/db"
 	"monitoring/internal/grpcserver"
-	pb "monitoring/internal/grpcserver/gen"
-	"monitoring/internal/server"
+	q "monitoring/internal/queue"
+	"monitoring/proto"
 	"net"
 
 	"google.golang.org/grpc"
@@ -15,7 +16,7 @@ import (
 
 func main() {
 	// initialize database
-	db, err := server.InitDB()
+	db, err := initDB.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -28,7 +29,7 @@ func main() {
 	defer cancel()
 
 	go func() {
-		if err := server.StartMetricsConsumer(ctx, db, rabbitURL); err != nil {
+		if err := q.StartMetricsConsumer(ctx, db, rabbitURL); err != nil {
 			log.Fatal("Failed to start RabbitMQ consumer: ", err)
 		}
 	}()
@@ -41,9 +42,8 @@ func main() {
 		}
 
 		grpcServer := grpc.NewServer()
-		repo := grpcserver.NewRepository(db)
-		metricsServer := grpcserver.NewMetricsServer(repo)
-		pb.RegisterMetricsServiceServer(grpcServer, metricsServer)
+		proto.RegisterHostServiceServer(grpcServer, &grpcserver.HostService{DB: db})
+		proto.RegisterMetricServiceServer(grpcServer, &grpcserver.MetricService{DB: db})
 
 		// register reflection service on gRPC server
 		reflection.Register(grpcServer)

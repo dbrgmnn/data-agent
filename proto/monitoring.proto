@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package monitoring;
+
+option go_package = "/proto;proto";
+
+message Empty {}
+
+message Host {
+    int64 id = 1;
+    string hostname = 2;
+    string os = 3;
+    string platform = 4;
+    string platform_ver = 5;
+    string kernel_ver = 6;
+}
+
+message HostList {
+    repeated Host hosts = 1;
+}
+
+message Metric {
+    int64 id = 1;
+    int64 host_id = 2;
+    double uptime = 3;
+    double cpu = 4;
+    double ram = 5;
+    string disk = 6;
+    string network = 7;
+    string time = 8;
+}
+
+message MetricList {
+    repeated Metric metrics = 1;
+}
+
+message HostName {
+    string hostname = 1;
+}
+
+message MetricRequest {
+    string hostname = 1;
+    int32 limit = 2;
+}
+
+service HostService {
+    rpc ListHosts(Empty) returns (HostList);
+    rpc GetHost(HostName) returns (Host);
+}
+
+service MetricService {
+    rpc ListMetrics(MetricRequest) returns (MetricList);
+    rpc GetLatestMetrics(Empty) returns (MetricList);
+}

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 )
 
+// main function to run the agent
 func main() {
 	// context
 	ctx, cancel := context.WithCancel(context.Background())

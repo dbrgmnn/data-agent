@@ -16,6 +16,7 @@ type Config struct {
 	DBName    string
 }
 
+// load configuration from .env file and environment variables
 func LoadConfig() *Config {
 	// load .env file
 	if err := godotenv.Load(); err != nil {
@@ -34,8 +35,8 @@ func LoadConfig() *Config {
 	return cfg
 }
 
+// check variable in the system environment
 func getEnv(key, defaultVal string) string {
-	// check variable in the system environment
 	if val := os.Getenv(key); val != "" {
 		return val
 	}

@@ -1,4 +1,4 @@
-package server
+package db
 
 import (
 	"database/sql"
@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// initialize and return database connection
 func InitDB() (*sql.DB, error) {
 	// load config from .env file
 	cfg := config.LoadConfig()
@@ -45,11 +46,12 @@ func InitDB() (*sql.DB, error) {
 func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
 	var hostID int64
 
+	// check if host exists in database
 	err := db.QueryRow("SELECT id FROM hosts WHERE hostname=$1", metric.Host.Hostname).Scan(&hostID)
 	if err == sql.ErrNoRows {
 
 		// insert host into database when not exists
-		err := db.QueryRow(
+		err = db.QueryRow(
 			`INSERT INTO hosts (hostname, os, platform, platform_ver, kernel_ver) 
 			VALUES ($1, $2, $3, $4, $5)
 			RETURNING id`,
@@ -67,6 +69,9 @@ func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
 	} else if err != nil {
 		log.Printf("error selecting host_id: %v", err)
 		return err
+	} else {
+		// host exists, use existing host_id
+		log.Printf("Host %s exists with ID %d", metric.Host.Hostname, hostID)
 	}
 
 	// set host_id in metric
@@ -81,6 +86,7 @@ func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
 	if err != nil {
 		return fmt.Errorf("error marshaling network metrics: %v", err)
 	}
+
 	// insert metric into database
 	_, err = db.Exec(
 		`INSERT INTO metrics (host_id, uptime, cpu, ram, disk, network, time)

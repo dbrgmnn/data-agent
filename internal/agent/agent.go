@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"monitoring/internal/models"
+	q "monitoring/internal/queue"
 	"regexp"
 	"time"
 )
@@ -19,15 +20,15 @@ func Run(ctx context.Context, rabbitURL string) {
 			log.Println("Stoping agent")
 			return
 		default:
-			// collect and send metrics every 5 seconds
+			// collect and send metrics
 			metricMsg := models.MetricMessage{
 				Host:   CollectHostInfo(),
 				Metric: CollectMetricInfo(),
 			}
-			if err := SendMetrics(&metricMsg, rabbitURL); err != nil {
+			if err := q.SendMetrics(&metricMsg, rabbitURL); err != nil {
 				log.Println("Failed to send metrics:", err)
 			}
-			time.Sleep(2 * time.Second)
+			time.Sleep(time.Second * 2)
 		}
 	}
 }

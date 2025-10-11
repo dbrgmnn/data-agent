@@ -43,7 +43,7 @@ func CollectHostInfo() models.Host {
 	}
 }
 
-// base metrics collection
+// collect metric information
 func CollectMetricInfo() models.Metric {
 	// get uptime
 	uptime, err := host.Uptime()
@@ -90,7 +90,7 @@ func CollectMetricInfo() models.Metric {
 	}
 }
 
-// disk metrics collection
+// collect disk metrics
 func CollectDiskMetric() ([]models.DiskMetric, error) {
 	partitions, err := disk.Partitions(true)
 	if err != nil {
@@ -114,7 +114,7 @@ func CollectDiskMetric() ([]models.DiskMetric, error) {
 	return metrics, nil
 }
 
-// network metrics collection
+// collect network metrics
 func CollectNetMetric() ([]models.NetMetric, error) {
 	counters, err := net.IOCounters(true)
 	if err != nil {

@@ -1,4 +1,4 @@
-package agent
+package queue
 
 import (
 	"encoding/json"
@@ -26,7 +26,7 @@ func SendMetrics(metricMsg *models.MetricMessage, server string) error {
 
 	// declare a queue
 	q, err := ch.QueueDeclare(
-		"metrics", // name
+		"metrics", // name of the queue
 		true,      // durable
 		false,     // delete when unused
 		false,     // exclusive

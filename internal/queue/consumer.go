@@ -1,15 +1,17 @@
-package server
+package queue
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
+	save "monitoring/internal/db"
 	"monitoring/internal/models"
 
 	"github.com/streadway/amqp"
 )
 
+// saves a metric to the database
 func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) error {
 	// connect to RabbitMQ server
 	conn, err := amqp.Dial(rabbitURL)
@@ -74,7 +76,7 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 			}
 
 			// send metric to database
-			if err := SaveMetric(db, &metric); err != nil {
+			if err := save.SaveMetric(db, &metric); err != nil {
 				log.Println("Failed to save metric:", err)
 				d.Nack(false, true) // send to queue again
 				continue

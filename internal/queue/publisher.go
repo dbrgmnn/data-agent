@@ -59,6 +59,6 @@ func SendMetrics(metricMsg *models.MetricMessage, server string) error {
 		return fmt.Errorf("failed to publish a message: %w", err)
 	}
 
-	log.Printf("Metric sent to queue: %+v\n", metricMsg)
+	log.Printf("Metric sent to queue: host=%s time=%s", metricMsg.Host.Hostname, metricMsg.Metric.Time)
 	return nil
 }

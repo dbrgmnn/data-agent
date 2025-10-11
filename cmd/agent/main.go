@@ -6,22 +6,24 @@ import (
 	"monitoring/internal/agent"
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 // main function to run the agent
 func main() {
-	// context
+	// create a context that is canceled on exit
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// handle signal to stop
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		<-c
-		log.Println("Ctrl+C detected, stopping...")
+		<-stop
+		log.Println("Stopping agent...")
 		cancel() // cancel context
 	}()
 	// run agent
-	url := agent.ParseFlags()
-	agent.Run(ctx, url)
+	url, interval := agent.ParseFlags()
+	agent.Run(ctx, url, interval)
 }

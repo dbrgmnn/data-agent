@@ -2,16 +2,6 @@ package models
 
 import "time"
 
-// represents a monitored host system
-type Host struct {
-	ID          int64  `json:"id"`
-	Hostname    string `json:"hostname"`
-	OS          string `json:"os"`
-	Platform    string `json:"platform"`
-	PlatformVer string `json:"platformver"`
-	KernelVer   string `json:"kernelver"`
-}
-
 // base metrics for all systems
 type Metric struct {
 	ID      int64        `json:"id"`
@@ -44,10 +34,4 @@ type NetMetric struct {
 	ErrOut      uint64 `json:"err_out"`
 	DropIn      uint64 `json:"drop_in"`
 	DropOut     uint64 `json:"drop_out"`
-}
-
-// extended metrics including host details
-type MetricMessage struct {
-	Host   Host   `json:"host"`
-	Metric Metric `json:"metric"`
 }

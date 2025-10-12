@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 // base metrics for all systems
 type Metric struct {
@@ -12,6 +15,25 @@ type Metric struct {
 	Disk    []DiskMetric `json:"disk,omitempty"`
 	Network []NetMetric  `json:"network,omitempty"`
 	Time    time.Time    `json:"time"`
+}
+
+// constructor for Metric
+func NewMetric(uptime uint64, cpu, ram float64, disk []DiskMetric, network []NetMetric) (*Metric, error) {
+	if cpu < 0 || cpu > 100 {
+		return nil, errors.New("invalid cpu value")
+	}
+	if ram < 0 || ram > 100 {
+		return nil, errors.New("invalid ram value")
+	}
+
+	return &Metric{
+		Uptime:  uptime,
+		CPU:     cpu,
+		RAM:     ram,
+		Disk:    disk,
+		Network: network,
+		Time:    time.Now(),
+	}, nil
 }
 
 // metrics for disk usage

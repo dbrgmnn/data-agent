@@ -17,30 +17,31 @@ import (
 // collect host information
 func CollectHostInfo() models.Host {
 	// get hostname
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "unknown"
-	}
+	hostname, _ := os.Hostname()
 
 	// get host info
 	hostInfo, err := host.Info()
 	if err != nil {
 		log.Println("host.Info error:", err)
 	}
-	var os, platform, platformVer, kernelVer string
-	if hostInfo != nil {
-		os = hostInfo.OS
-		platform = hostInfo.Platform
-		platformVer = hostInfo.PlatformVersion
-		kernelVer = hostInfo.KernelVersion
+	if hostInfo == nil {
+		log.Println("host.Info returned nil")
+		return models.Host{}
 	}
-	return models.Host{
-		Hostname:    hostname,
-		OS:          os,
-		Platform:    platform,
-		PlatformVer: platformVer,
-		KernelVer:   kernelVer,
+
+	// create Host model
+	host, err := models.NewHost(
+		hostname,
+		hostInfo.OS,
+		hostInfo.Platform,
+		hostInfo.PlatformVersion,
+		hostInfo.KernelVersion,
+	)
+	if err != nil {
+		log.Println("NewHost error:", err)
 	}
+
+	return *host
 }
 
 // collect metric information
@@ -80,14 +81,19 @@ func CollectMetricInfo() models.Metric {
 		log.Println("CollectNetMetric error:", err)
 	}
 
-	return models.Metric{
-		Uptime:  uptime,
-		CPU:     cpuUsage,
-		RAM:     memPercent,
-		Disk:    diskMetric,
-		Network: netMetric,
-		Time:    time.Now(),
+	// create Metric model
+	metric, err := models.NewMetric(
+		uptime,
+		cpuUsage,
+		memPercent,
+		diskMetric,
+		netMetric,
+	)
+	if err != nil {
+		log.Println("NewMetric error:", err)
 	}
+
+	return *metric
 }
 
 // collect disk metrics
@@ -111,6 +117,10 @@ func CollectDiskMetric() ([]models.DiskMetric, error) {
 			UsedPercent: usage.UsedPercent,
 		})
 	}
+
+	if metrics == nil {
+		metrics = []models.DiskMetric{}
+	}
 	return metrics, nil
 }
 
@@ -133,6 +143,10 @@ func CollectNetMetric() ([]models.NetMetric, error) {
 			DropIn:      c.Dropin,
 			DropOut:     c.Dropout,
 		})
+	}
+
+	if metrics == nil {
+		metrics = []models.NetMetric{}
 	}
 	return metrics, nil
 }

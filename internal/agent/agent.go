@@ -26,11 +26,11 @@ func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
 			return
 		case <-ticker.C:
 			// collect and send metrics
-			metricMsg := models.MetricMessage{
-				Host:   CollectHostInfo(),
-				Metric: CollectMetricInfo(),
-			}
-			if err := q.SendMetrics(&metricMsg, rabbitURL); err != nil {
+			host := CollectHostInfo()
+			metric := CollectMetricInfo()
+			metricMsg := models.NewMetricMessage(&host, &metric)
+
+			if err := q.SendMetrics(metricMsg, rabbitURL); err != nil {
 				log.Println("Failed to send metrics:", err)
 			}
 		}

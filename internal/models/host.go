@@ -9,3 +9,18 @@ type Host struct {
 	PlatformVer string `json:"platformver"`
 	KernelVer   string `json:"kernelver"`
 }
+
+// constructor for Host with basic validation
+func NewHost(hostname, os, platform, platformVer, kernelVer string) (*Host, error) {
+	if hostname == "" {
+		hostname = "unknown"
+	}
+
+	return &Host{
+		Hostname:    hostname,
+		OS:          os,
+		Platform:    platform,
+		PlatformVer: platformVer,
+		KernelVer:   kernelVer,
+	}, nil
+}

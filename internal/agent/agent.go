@@ -25,13 +25,22 @@ func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
 			log.Println("Agent stopped")
 			return
 		case <-ticker.C:
+
 			// collect and send metrics
-			host := CollectHostInfo()
-			metric := CollectMetricInfo()
+			host, err := CollectHostInfo()
+			if err != nil {
+				log.Println("CollectHostInfo error:", err)
+				continue
+			}
+			metric, err := CollectMetricInfo()
+			if err != nil {
+				log.Println("CollectMetricInfo error:", err)
+				continue
+			}
 			metricMsg := models.NewMetricMessage(&host, &metric)
 
 			if err := q.SendMetrics(metricMsg, rabbitURL); err != nil {
-				log.Println("Failed to send metrics:", err)
+				log.Printf("Failed to send metrics: %v\n", err)
 			}
 		}
 	}
@@ -42,6 +51,11 @@ func ParseFlags() (string, time.Duration) {
 	rabbitURL := flag.String("url", "", "RabbitMQ URL")
 	interval := flag.Int("interval", 2, "Interval in seconds between metric collections")
 	flag.Parse()
+
+	if *interval <= 0 {
+		log.Println("Invalid interval, using default 2 seconds")
+		*interval = 2
+	}
 
 	if *rabbitURL == "" {
 		log.Fatal("RabbitMQ URL must be specified with --url")

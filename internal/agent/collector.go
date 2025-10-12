@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"log"
+	"errors"
 	"monitoring/internal/models"
 
 	"os"
@@ -15,18 +15,20 @@ import (
 )
 
 // collect host information
-func CollectHostInfo() models.Host {
+func CollectHostInfo() (models.Host, error) {
 	// get hostname
-	hostname, _ := os.Hostname()
+	hostname, err := os.Hostname()
+	if err != nil {
+		return models.Host{}, err
+	}
 
 	// get host info
 	hostInfo, err := host.Info()
 	if err != nil {
-		log.Println("host.Info error:", err)
+		return models.Host{}, err
 	}
 	if hostInfo == nil {
-		log.Println("host.Info returned nil")
-		return models.Host{}
+		return models.Host{}, errors.New("host.Info returned nil")
 	}
 
 	// create Host model
@@ -38,24 +40,24 @@ func CollectHostInfo() models.Host {
 		hostInfo.KernelVersion,
 	)
 	if err != nil {
-		log.Println("NewHost error:", err)
+		return models.Host{}, err
 	}
 
-	return *host
+	return *host, nil
 }
 
 // collect metric information
-func CollectMetricInfo() models.Metric {
+func CollectMetricInfo() (models.Metric, error) {
 	// get uptime
 	uptime, err := host.Uptime()
 	if err != nil {
-		log.Println("host.Uptime error:", err)
+		return models.Metric{}, err
 	}
 
 	// get CPU info
 	cpuInfo, err := cpu.Percent(time.Second, false)
 	if err != nil {
-		log.Println("cpu.Percent error:", err)
+		return models.Metric{}, err
 	}
 	cpuUsage := 0.0
 	if len(cpuInfo) > 0 {
@@ -65,20 +67,20 @@ func CollectMetricInfo() models.Metric {
 	// get memory info
 	memInfo, err := mem.VirtualMemory()
 	if err != nil {
-		log.Println("mem.VirtualMemory error:", err)
+		return models.Metric{}, err
 	}
-	memPercent := 0.0
-	if memInfo != nil {
-		memPercent = memInfo.UsedPercent
+	if memInfo == nil {
+		return models.Metric{}, errors.New("mem.VirtualMemory returned nil")
 	}
+	memPercent := memInfo.UsedPercent
 
 	diskMetric, err := CollectDiskMetric()
 	if err != nil {
-		log.Println("CollectDiskMetric error:", err)
+		return models.Metric{}, err
 	}
 	netMetric, err := CollectNetMetric()
 	if err != nil {
-		log.Println("CollectNetMetric error:", err)
+		return models.Metric{}, err
 	}
 
 	// create Metric model
@@ -90,10 +92,10 @@ func CollectMetricInfo() models.Metric {
 		netMetric,
 	)
 	if err != nil {
-		log.Println("NewMetric error:", err)
+		return models.Metric{}, err
 	}
 
-	return *metric
+	return *metric, nil
 }
 
 // collect disk metrics

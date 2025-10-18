@@ -1,0 +1,22 @@
+# stage 1: build ingestor server binary
+FROM golang:1.25-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+WORKDIR /app/cmd/ingestor
+RUN GOOS=linux GOARCH=arm64 go build -o /ingestor
+
+# stage 2: create a minimal image to run ingestor server
+FROM alpine:latest
+# install bash
+RUN apk add --no-cache bash curl netcat-openbsd
+WORKDIR /app
+# install scripts dependencies
+COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it
+RUN chmod +x /usr/local/bin/wait-for-it
+# copy the ingestor binary
+COPY --from=builder /ingestor .
+COPY .env .
+# use wait-for-it to wait for postgres to be ready before starting the ingestor server
+CMD ["sh", "-c", "wait-for-it postgres:5432 -- wait-for-it rabbitmq:5672 -- ./ingestor"]

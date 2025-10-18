@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"log"
 	"monitoring/internal/config"
 	initDB "monitoring/internal/db"
 	"monitoring/internal/grpcserver"
-	q "monitoring/internal/queue"
 	"monitoring/proto"
 	"net"
 	"os"
@@ -17,6 +15,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+// main function to start the gRPC server
 func main() {
 	// initialize database
 	db, err := initDB.InitDB()
@@ -27,19 +26,7 @@ func main() {
 
 	// load configuration
 	cfg := config.LoadConfig()
-	rabbitURL := cfg.RabbitURL
 	grpcPort := cfg.GRPCPort
-
-	// create a context that is canceled on exit
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// start RabbitMQ consumer
-	go func() {
-		if err := q.StartMetricsConsumer(ctx, db, rabbitURL); err != nil {
-			log.Printf("Failed to start RabbitMQ consumer: %v", err)
-		}
-	}()
 
 	// start gRPC server
 	lis, err := net.Listen("tcp", grpcPort)
@@ -50,24 +37,21 @@ func main() {
 	grpcServer := grpc.NewServer()
 	proto.RegisterHostServiceServer(grpcServer, &grpcserver.HostService{DB: db})
 	proto.RegisterMetricServiceServer(grpcServer, &grpcserver.MetricService{DB: db})
-
-	// register reflection service on gRPC server
 	reflection.Register(grpcServer)
 
 	go func() {
-		log.Printf("gRPC server listening on %s", grpcPort)
-
+		log.Printf("gRPC server started on %s", grpcPort)
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Printf("Failed to serve gRPC server: %v", err)
-			cancel()
+			log.Fatalf("Failed to serve gRPC server: %v", err)
 		}
 	}()
 
+	// handle termination signals
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	// wait for termination signal
 	<-stop
-	log.Println("Shutting down server...")
-	cancel()
+	log.Println("Shutting down gRPC server...")
 	grpcServer.GracefulStop()
-	log.Println("Server stopped.")
 }

@@ -1,7 +1,7 @@
 services:
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq
+    # container_name: rabbitmq
     ports:
       - "5672:5672" # rabbitMQ default port
       - "15672:15672" # rabbitMQ management UI
@@ -13,16 +13,19 @@ services:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 3
+    restart: unless-stopped
   postgres:
     image: postgres:16
-    container_name: postgres
+    # container_name: postgres
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
+    env_file:
+      - .env
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./internal/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql # init tables
@@ -30,20 +33,39 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
-      retries: 5
-  server:
+      retries: 3
+    restart: unless-stopped
+  ingestor:
     build:
       context: .
-      dockerfile: Dockerfile.server
+      dockerfile: Dockerfile.ingestor
+    depends_on:
+      - rabbitmq
+      - postgres
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -h postgres -p 5432 && nc -z rabbitmq 5672 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
     ports:
       - "50051:50051" # gRPC server port
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
+      - postgres
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -h postgres -p 5432 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 volumes:
   pgdata:
   rabbitmq_data:

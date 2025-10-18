@@ -54,12 +54,9 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 	}
 
 	// process messages
-	log.Println("Started metrics consumer")
-
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Context canceled, stopping consumer...")
 			ch.Cancel("", false) // stop consuming
 			return nil
 		case d, ok := <-msgs:

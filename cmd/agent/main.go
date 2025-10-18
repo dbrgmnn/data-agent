@@ -15,15 +15,16 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// handle signal to stop
+	// handle termination signals in a separate goroutine
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-stop
 		log.Println("Stopping agent...")
-		cancel() // cancel context
+		cancel()
 	}()
-	// run agent
+
+	// parse flags and run the agent
 	url, interval := agent.ParseFlags()
 	agent.Run(ctx, url, interval)
 }

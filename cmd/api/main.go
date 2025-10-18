@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"monitoring/internal/config"
-	initDB "monitoring/internal/db"
+	dataBase "monitoring/internal/db"
 	"monitoring/internal/grpcserver"
 	"monitoring/proto"
 	"net"
@@ -18,7 +18,7 @@ import (
 // main function to start the gRPC server
 func main() {
 	// initialize database
-	db, err := initDB.InitDB()
+	db, err := dataBase.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}

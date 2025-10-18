@@ -1,12 +1,15 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"monitoring/internal/config"
 	"monitoring/internal/models"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -26,16 +29,18 @@ func InitDB() (*sql.DB, error) {
 	// open connection
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Printf("Error opening database: %v\n", err)
-		return nil, err
+		return nil, fmt.Errorf("open database: %w", err)
 	}
 
+	// create a context that is canceled on exit
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	// test connection
-	err = db.Ping()
+	err = db.PingContext(ctx)
 	if err != nil {
 		db.Close()
-		log.Printf("Error connecting to the database: %v\n", err)
-		return nil, err
+		return nil, fmt.Errorf("connect to the database: %w", err)
 	}
 
 	log.Println("Successfully connected to the database")
@@ -44,14 +49,30 @@ func InitDB() (*sql.DB, error) {
 
 // insert host and metric into database
 func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
+	// transactions for secure queries
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+
+	// rollback will be executed if something goes wrong
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Printf("transaction rollback error: %v", err)
+		}
+	}()
+
+	// create a context that is canceled on exit
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	var hostID int64
-
 	// check if host exists in database
-	err := db.QueryRow("SELECT id FROM hosts WHERE hostname=$1", metric.Host.Hostname).Scan(&hostID)
-	if err == sql.ErrNoRows {
-
+	err = tx.QueryRowContext(ctx, "SELECT id FROM hosts WHERE hostname=$1", metric.Host.Hostname).Scan(&hostID)
+	if errors.Is(err, sql.ErrNoRows) {
 		// insert host into database when not exists
-		err = db.QueryRow(
+		err = tx.QueryRowContext(
+			ctx,
 			`INSERT INTO hosts (hostname, os, platform, platform_ver, kernel_ver) 
 			VALUES ($1, $2, $3, $4, $5)
 			RETURNING id`,
@@ -61,17 +82,11 @@ func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
 			metric.Host.PlatformVer,
 			metric.Host.KernelVer,
 		).Scan(&hostID)
-
 		if err != nil {
-			log.Printf("Error inserting host info: %v\n", err)
-			return err
+			return fmt.Errorf("insert host info: %w", err)
 		}
 	} else if err != nil {
-		log.Printf("error selecting host_id: %v", err)
-		return err
-	} else {
-		// host exists, use existing host_id
-		log.Printf("Host %s exists with ID %d", metric.Host.Hostname, hostID)
+		return fmt.Errorf("select host_id: %w", err)
 	}
 
 	// set host_id in metric
@@ -80,15 +95,16 @@ func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
 	// marshaling disk and network slices to JSON
 	diskJSON, err := json.Marshal(metric.Metric.Disk)
 	if err != nil {
-		return fmt.Errorf("error marshaling disk metrics: %v", err)
+		return fmt.Errorf("marshal disk metrics: %w", err)
 	}
 	networkJSON, err := json.Marshal(metric.Metric.Network)
 	if err != nil {
-		return fmt.Errorf("error marshaling network metrics: %v", err)
+		return fmt.Errorf("marshal network metrics: %w", err)
 	}
 
 	// insert metric into database
-	_, err = db.Exec(
+	_, err = tx.ExecContext(
+		ctx,
 		`INSERT INTO metrics (host_id, uptime, cpu, ram, disk, network, time)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		metric.Metric.HostID,
@@ -100,8 +116,12 @@ func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
 		metric.Metric.Time,
 	)
 	if err != nil {
-		log.Printf("Error inserting metric: %v\n", err)
-		return err
+		return fmt.Errorf("insert metric: %w", err)
+	}
+
+	// commit transaction when all saved
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit transaction: %w", err)
 	}
 
 	return nil

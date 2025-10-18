@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 	"monitoring/internal/config"
-	initDB "monitoring/internal/db"
-	q "monitoring/internal/queue"
+	dataBase "monitoring/internal/db"
+	rabbit "monitoring/internal/queue"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,7 +14,7 @@ import (
 // main function to start the RabbitMQ consumer
 func main() {
 	// initialize database
-	db, err := initDB.InitDB()
+	db, err := dataBase.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -39,7 +39,7 @@ func main() {
 
 	// start RabbitMQ consumer
 	log.Println("Starting RabbitMQ consumer...")
-	if err := q.StartMetricsConsumer(ctx, db, rabbitURL); err != nil {
+	if err := rabbit.StartMetricsConsumer(ctx, db, rabbitURL); err != nil {
 		log.Fatalf("Failed to start RabbitMQ consumer: %v", err)
 	}
 }

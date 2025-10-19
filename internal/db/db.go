@@ -33,7 +33,7 @@ func InitDB() (*sql.DB, error) {
 	}
 
 	// create a context that is canceled on exit
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// test connection
@@ -48,7 +48,7 @@ func InitDB() (*sql.DB, error) {
 }
 
 // insert host and metric into database
-func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
+func SaveMetric(ctx context.Context, db *sql.DB, metric *models.MetricMessage) error {
 	// transactions for secure queries
 	tx, err := db.Begin()
 	if err != nil {
@@ -61,10 +61,6 @@ func SaveMetric(db *sql.DB, metric *models.MetricMessage) error {
 			log.Printf("transaction rollback error: %v", err)
 		}
 	}()
-
-	// create a context that is canceled on exit
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
 	var hostID int64
 	// check if host exists in database

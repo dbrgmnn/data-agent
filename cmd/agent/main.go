@@ -11,6 +11,10 @@ import (
 
 // main function to run the agent
 func main() {
+	// add prefix for logs
+	log.SetPrefix("[agent] ")
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	// create a context that is canceled on exit
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

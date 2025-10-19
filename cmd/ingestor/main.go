@@ -13,6 +13,10 @@ import (
 
 // main function to start the RabbitMQ consumer
 func main() {
+	// add prefix for logs
+	log.SetPrefix("[ingestor] ")
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	// initialize database
 	db, err := dataBase.InitDB()
 	if err != nil {

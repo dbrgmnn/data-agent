@@ -5,15 +5,13 @@ import (
 	"flag"
 	"log"
 	"monitoring/internal/models"
-	q "monitoring/internal/queue"
+	rabbit "monitoring/internal/queue"
 	"net/url"
 	"time"
 )
 
 // run the agent to collect and send metrics to RabbitMQ
 func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
-	log.Println("Sending metrics to RabbitMQ:", rabbitURL)
-
 	// send metrics every N seconds
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -39,7 +37,8 @@ func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
 			}
 			metricMsg := models.NewMetricMessage(&host, &metric)
 
-			if err := q.SendMetrics(metricMsg, rabbitURL); err != nil {
+			log.Printf("Sending metrics from [%s] to [%s]:", host.Hostname, rabbitURL)
+			if err := rabbit.SendMetrics(metricMsg, rabbitURL); err != nil {
 				log.Printf("Failed to send metrics: %v\n", err)
 			}
 		}

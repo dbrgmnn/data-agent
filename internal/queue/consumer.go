@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
-	save "monitoring/internal/db"
+	dataBase "monitoring/internal/db"
 	"monitoring/internal/models"
 
 	"github.com/streadway/amqp"
@@ -74,7 +74,7 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 			}
 
 			// send metric to database
-			if err := save.SaveMetric(db, &metric); err != nil {
+			if err := dataBase.SaveMetric(ctx, db, &metric); err != nil {
 				log.Println("Failed to save metric:", err)
 				d.Nack(false, true) // send to queue again
 				continue

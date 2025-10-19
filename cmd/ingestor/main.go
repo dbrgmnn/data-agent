@@ -5,7 +5,7 @@ import (
 	"log"
 	"monitoring/internal/config"
 	dataBase "monitoring/internal/db"
-	rabbit "monitoring/internal/queue"
+	"monitoring/internal/queue"
 	"os"
 	"os/signal"
 	"syscall"
@@ -41,9 +41,10 @@ func main() {
 		cancel()
 	}()
 
+	// create consumer
+	consumer := queue.NewConsumer(ctx, db, rabbitURL)
+
 	// start RabbitMQ consumer
 	log.Println("Starting RabbitMQ consumer...")
-	if err := rabbit.StartMetricsConsumer(ctx, db, rabbitURL); err != nil {
-		log.Fatalf("Failed to start RabbitMQ consumer: %v", err)
-	}
+	consumer.StartMetricsConsumer()
 }

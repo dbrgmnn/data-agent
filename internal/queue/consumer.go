@@ -4,61 +4,74 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	dataBase "monitoring/internal/db"
 	"monitoring/internal/models"
+	"time"
 
 	"github.com/streadway/amqp"
 )
 
-// saves a metric to the database
-func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) error {
-	// connect to RabbitMQ server
-	conn, err := amqp.Dial(rabbitURL)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
+type Consumer struct {
+	conn      *amqp.Connection
+	ch        *amqp.Channel
+	db        *sql.DB
+	ctx       context.Context
+	rabbitURL string
+}
 
+// create a new consumer with context
+func NewConsumer(ctx context.Context, db *sql.DB, rabbitURL string) *Consumer {
+	return &Consumer{
+		db:        db,
+		ctx:       ctx,
+		rabbitURL: rabbitURL,
+	}
+}
+
+// connect to RabbitMQ server
+func (c *Consumer) connect() error {
+	conn, err := amqp.DialConfig(c.rabbitURL, amqp.Config{
+		Heartbeat: 10 * time.Second,
+		Locale:    "en_US",
+	})
+	if err != nil {
+		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
+	}
+
+	// open channel
 	ch, err := conn.Channel()
 	if err != nil {
-		return err
-	}
-	defer ch.Close()
-
-	// declare a queue
-	q, err := ch.QueueDeclare(
-		"metrics", // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
-	if err != nil {
-		return err
+		conn.Close()
+		return fmt.Errorf("failed to open channel: %w", err)
 	}
 
-	// subscribe to the queue
-	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,  // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // arguments
-	)
+	c.conn = conn
+	c.ch = ch
+	return nil
+}
+
+// saves a metric to the database
+func (c *Consumer) consumeMetrics() error {
+	// declare a queue: name, durable, delete when unused, exclusive, no-wait, arguments
+	q, err := c.ch.QueueDeclare("metrics", true, false, false, false, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to declare queue: %w", err)
+	}
+
+	// subscribe to the queue: name, consumer, auto-ack, exclusive, no-local, no-wait, arguments
+	msgs, err := c.ch.Consume(q.Name, "", false, false, false, false, nil)
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to the queue: %w", err)
 	}
 
 	// process messages
 	for {
 		select {
-		case <-ctx.Done():
-			ch.Cancel("", false) // stop consuming
+		case <-c.ctx.Done():
 			return nil
+
 		case d, ok := <-msgs:
 			if !ok {
 				log.Println("Message channel closed")
@@ -69,19 +82,52 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 			var metric models.MetricMessage
 			if err := json.Unmarshal(d.Body, &metric); err != nil {
 				log.Println("Failed to decode metric:", err)
-				d.Nack(false, false) // don't send to queue
+				// don't send to queue
+				d.Nack(false, false)
 				continue
 			}
 
 			// send metric to database
-			if err := dataBase.SaveMetric(ctx, db, &metric); err != nil {
+			if err := dataBase.SaveMetric(c.ctx, c.db, &metric); err != nil {
 				log.Println("Failed to save metric:", err)
-				d.Nack(false, true) // send to queue again
+				// send to queue again
+				d.Nack(false, true)
 				continue
 			}
 
-			d.Ack(false) // acknowledge message
+			// acknowledge message
+			d.Ack(false)
 			log.Printf("Metric saved from queue: host=%s", metric.Host.Hostname)
+		}
+	}
+}
+
+// consume metrics
+func (c *Consumer) StartMetricsConsumer() {
+	for {
+		if err := c.connect(); err != nil {
+			log.Println("Connection failed, retrying in 5s:", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		log.Println("Connected to RabbitMQ")
+		if err := c.consumeMetrics(); err != nil {
+			log.Println("Consume error, reconnecting:", err)
+		}
+
+		if c.ch != nil {
+			c.ch.Close()
+		}
+		if c.conn != nil {
+			c.conn.Close()
+		}
+
+		select {
+		case <-c.ctx.Done():
+			log.Println("Consumer stopped by context")
+			return
+		case <-time.After(5 * time.Second):
 		}
 	}
 }

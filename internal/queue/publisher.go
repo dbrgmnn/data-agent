@@ -9,20 +9,25 @@ import (
 	"github.com/streadway/amqp"
 )
 
-// send metrics to RabbitMQ
-func SendMetrics(metricMsg *models.MetricMessage, server string) error {
+type Publisher struct {
+	conn *amqp.Connection
+	ch   *amqp.Channel
+	q    amqp.Queue
+}
+
+// create one connection and queue
+func NewPublisher(server string) (*Publisher, error) {
 	// connect to RabbitMQ server
 	conn, err := amqp.Dial(server)
 	if err != nil {
-		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
+		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}
-	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return fmt.Errorf("failed to open a channel: %w", err)
+		conn.Close()
+		return nil, fmt.Errorf("failed to open a channel: %w", err)
 	}
-	defer ch.Close()
 
 	// declare a queue
 	q, err := ch.QueueDeclare(
@@ -34,9 +39,17 @@ func SendMetrics(metricMsg *models.MetricMessage, server string) error {
 		nil,       // arguments
 	)
 	if err != nil {
-		return fmt.Errorf("failed to declare a queue: %w", err)
+		ch.Close()
+		conn.Close()
+		return nil, fmt.Errorf("failed to declare a queue: %w", err)
 	}
 
+	log.Println("Connected to RabbitMQ and declare queue:", q.Name)
+	return &Publisher{conn: conn, ch: ch, q: q}, nil
+}
+
+// publish a message without opening a new connection
+func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
 	// serialize metric to JSON
 	body, err := json.Marshal(metricMsg)
 	if err != nil {
@@ -44,11 +57,11 @@ func SendMetrics(metricMsg *models.MetricMessage, server string) error {
 	}
 
 	// publish the message
-	err = ch.Publish(
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
+	err = p.ch.Publish(
+		"",       // exchange
+		p.q.Name, // routing key
+		false,    // mandatory
+		false,    // immediate
 		amqp.Publishing{
 			DeliveryMode: amqp.Persistent, // make message persistent
 			ContentType:  "application/json",
@@ -61,4 +74,15 @@ func SendMetrics(metricMsg *models.MetricMessage, server string) error {
 
 	log.Printf("Metric sent to queue: host=%s time=%s", metricMsg.Host.Hostname, metricMsg.Metric.Time)
 	return nil
+}
+
+// close connection
+func (p *Publisher) Close() {
+	if p.ch != nil {
+		p.ch.Close()
+	}
+	if p.conn != nil {
+		p.conn.Close()
+	}
+	log.Println("Connection closed")
 }

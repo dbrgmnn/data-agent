@@ -81,7 +81,7 @@ func StartMetricsConsumer(ctx context.Context, db *sql.DB, rabbitURL string) err
 			}
 
 			d.Ack(false) // acknowledge message
-			log.Printf("Metric saved from queue: host=%s\n time=%s", metric.Host.Hostname, metric.Metric.Time)
+			log.Printf("Metric saved from queue: host=%s", metric.Host.Hostname)
 		}
 	}
 }

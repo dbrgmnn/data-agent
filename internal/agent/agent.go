@@ -12,6 +12,13 @@ import (
 
 // run the agent to collect and send metrics to RabbitMQ
 func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
+	// create one connection
+	publisher, err := rabbit.NewPublisher(rabbitURL)
+	if err != nil {
+		log.Fatalf("Failed to create publisher: %v", err)
+	}
+	defer publisher.Close()
+
 	// send metrics every N seconds
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -23,26 +30,25 @@ func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
 			log.Println("Agent stopped")
 			return
 		case <-ticker.C:
-
-			// collect and send metrics
-			host, err := CollectHostInfo()
-			if err != nil {
-				log.Println("CollectHostInfo error:", err)
-				continue
-			}
-			metric, err := CollectMetricInfo()
-			if err != nil {
-				log.Println("CollectMetricInfo error:", err)
-				continue
-			}
-			metricMsg := models.NewMetricMessage(&host, &metric)
-
-			log.Printf("Sending metrics from [%s] to [%s]:", host.Hostname, rabbitURL)
-			if err := rabbit.SendMetrics(metricMsg, rabbitURL); err != nil {
-				log.Printf("Failed to send metrics: %v\n", err)
+			if err := collectAndSend(publisher); err != nil {
+				log.Println("Failed to send metrics:", err)
 			}
 		}
 	}
+}
+
+// collect and send metrics
+func collectAndSend(publisher *rabbit.Publisher) error {
+	host, err := CollectHostInfo()
+	if err != nil {
+		return err
+	}
+	metric, err := CollectMetricInfo()
+	if err != nil {
+		return err
+	}
+	metricMsg := models.NewMetricMessage(&host, &metric)
+	return publisher.Publish(metricMsg)
 }
 
 // parse flag --url and --interval

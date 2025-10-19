@@ -5,19 +5,19 @@ import (
 	"flag"
 	"log"
 	"monitoring/internal/models"
-	rabbit "monitoring/internal/queue"
+	"monitoring/internal/queue"
 	"net/url"
 	"time"
 )
 
 // run the agent to collect and send metrics to RabbitMQ
 func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
-	// create one connection
-	publisher, err := rabbit.NewPublisher(rabbitURL)
-	if err != nil {
-		log.Fatalf("Failed to create publisher: %v", err)
-	}
+	// create publisher
+	publisher := queue.NewPublisher(ctx, rabbitURL)
 	defer publisher.Close()
+
+	// start publish
+	go publisher.StartPublisher()
 
 	// send metrics every N seconds
 	ticker := time.NewTicker(interval)
@@ -38,7 +38,7 @@ func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
 }
 
 // collect and send metrics
-func collectAndSend(publisher *rabbit.Publisher) error {
+func collectAndSend(publisher *queue.Publisher) error {
 	host, err := CollectHostInfo()
 	if err != nil {
 		return err

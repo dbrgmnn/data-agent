@@ -30,7 +30,7 @@ func NewConsumer(ctx context.Context, db *sql.DB, rabbitURL string) *Consumer {
 	}
 }
 
-// connect to RabbitMQ server
+// connect to RabbitMQ
 func (c *Consumer) connect() error {
 	conn, err := amqp.DialConfig(c.rabbitURL, amqp.Config{
 		Heartbeat: 10 * time.Second,
@@ -54,13 +54,13 @@ func (c *Consumer) connect() error {
 
 // saves a metric to the database
 func (c *Consumer) consumeMetrics() error {
-	// declare a queue: name, durable, delete when unused, exclusive, no-wait, arguments
+	// declare a queue
 	q, err := c.ch.QueueDeclare("metrics", true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to declare queue: %w", err)
 	}
 
-	// subscribe to the queue: name, consumer, auto-ack, exclusive, no-local, no-wait, arguments
+	// subscribe to the queue
 	msgs, err := c.ch.Consume(q.Name, "", false, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to the queue: %w", err)

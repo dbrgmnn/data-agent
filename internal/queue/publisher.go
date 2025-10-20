@@ -61,7 +61,7 @@ func (p *Publisher) connect() error {
 // publish a message without opening a new connection
 func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
 	// open new channel when closed
-	if p.ch == nil {
+	if p.conn == nil || p.ch == nil {
 		if err := p.connect(); err != nil {
 			return err
 		}
@@ -73,13 +73,16 @@ func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
 		return fmt.Errorf("failed to marshal metric: %w", err)
 	}
 
+	// publish metrics
 	err = p.ch.Publish("", p.q.Name, false, false, amqp.Publishing{
 		DeliveryMode: amqp.Persistent,
 		ContentType:  "application/json",
 		Body:         body,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to publish metric: %w", err)
+		log.Println("Failed to publish, reconnecting:", err)
+		p.Close()
+		return err
 	}
 
 	log.Printf("Metric sent to queue: host=%s", metricMsg.Host.Hostname)
@@ -87,7 +90,7 @@ func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
 }
 
 // publish metrics
-func (p *Publisher) StartPublisher() {
+func (p *Publisher) StartMetricsPublisher() {
 	for {
 		if err := p.connect(); err != nil {
 			log.Println("Publisher connection failed, retrying in 5s:", err)
@@ -100,7 +103,7 @@ func (p *Publisher) StartPublisher() {
 			}
 		}
 
-		notifyClose := make(chan *amqp.Error)
+		notifyClose := make(chan *amqp.Error, 1)
 		p.conn.NotifyClose(notifyClose)
 
 		select {
@@ -109,14 +112,16 @@ func (p *Publisher) StartPublisher() {
 			p.Close()
 			return
 		case err := <-notifyClose:
-			log.Println("Publisher connection closed, reconnecting:", err)
+			if err != nil {
+				log.Println("Publisher connection closed, reconnecting:", err)
+			}
 			p.Close()
 			time.Sleep(5 * time.Second)
 		}
 	}
 }
 
-// close connection
+// close channel and connection gracefully
 func (p *Publisher) Close() {
 	if p.ch != nil {
 		if err := p.ch.Close(); err != nil {

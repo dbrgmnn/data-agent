@@ -17,7 +17,7 @@ func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
 	defer publisher.Close()
 
 	// start publish
-	go publisher.StartPublisher()
+	go publisher.StartMetricsPublisher()
 
 	// send metrics every N seconds
 	ticker := time.NewTicker(interval)

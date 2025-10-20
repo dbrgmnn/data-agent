@@ -106,7 +106,7 @@ func (c *Consumer) consumeMetrics() error {
 func (c *Consumer) StartMetricsConsumer() {
 	for {
 		if err := c.connect(); err != nil {
-			log.Println("Connection failed, retrying in 5s:", err)
+			log.Println("Consumer connection failed, retrying in 5s:", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -116,18 +116,29 @@ func (c *Consumer) StartMetricsConsumer() {
 			log.Println("Consume error, reconnecting:", err)
 		}
 
-		if c.ch != nil {
-			c.ch.Close()
-		}
-		if c.conn != nil {
-			c.conn.Close()
-		}
-
 		select {
 		case <-c.ctx.Done():
 			log.Println("Consumer stopped by context")
+			c.Close()
 			return
 		case <-time.After(5 * time.Second):
 		}
 	}
+}
+
+// close channel and connection gracefully
+func (c *Consumer) Close() {
+	if c.ch != nil {
+		if err := c.ch.Close(); err != nil {
+			log.Println("Error closing channel:", err)
+		}
+		c.ch = nil
+	}
+	if c.conn != nil {
+		if err := c.conn.Close(); err != nil {
+			log.Println("Error closing connection:", err)
+		}
+		c.conn = nil
+	}
+	log.Println("Consumer connection closed")
 }

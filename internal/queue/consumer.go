@@ -32,6 +32,7 @@ func NewConsumer(ctx context.Context, db *sql.DB, rabbitURL string) *Consumer {
 
 // connect to RabbitMQ
 func (c *Consumer) connect() error {
+	// open connection
 	conn, err := amqp.DialConfig(c.rabbitURL, amqp.Config{
 		Heartbeat: 10 * time.Second,
 		Locale:    "en_US",

@@ -56,6 +56,6 @@ func main() {
 
 	// wait for termination signal
 	<-stop
-	log.Println("Shutting down gRPC server...")
+	log.Println("Stopping gRPC server...")
 	grpcServer.GracefulStop()
 }

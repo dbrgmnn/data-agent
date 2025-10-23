@@ -12,11 +12,8 @@ import (
 
 // run the agent to collect and send metrics to RabbitMQ
 func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
-	// create publisher
+	// create and start publisher
 	publisher := queue.NewPublisher(ctx, rabbitURL)
-	defer publisher.Close()
-
-	// start publish
 	go publisher.StartMetricsPublisher()
 
 	// send metrics every N seconds
@@ -24,7 +21,6 @@ func Run(ctx context.Context, rabbitURL string, interval time.Duration) {
 	defer ticker.Stop()
 
 	for {
-		// check if context is done
 		select {
 		case <-ctx.Done():
 			log.Println("Agent stopped")

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"monitoring/internal/models"
+	"sync"
 	"time"
 
 	"github.com/streadway/amqp"
@@ -17,6 +18,7 @@ type Publisher struct {
 	q      amqp.Queue
 	ctx    context.Context
 	server string
+	mu     sync.Mutex
 }
 
 // create a new publisher with context
@@ -27,8 +29,17 @@ func NewPublisher(ctx context.Context, server string) *Publisher {
 	}
 }
 
-// connect to RabbitMQ
+// connect to RabbitMQ with mutex
 func (p *Publisher) connect() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	// return nil if connection closed
+	if p.conn != nil && !p.conn.IsClosed() && p.ch != nil {
+		return nil
+	}
+
+	// open connection
 	conn, err := amqp.DialConfig(p.server, amqp.Config{
 		Heartbeat: 10 * time.Second,
 		Locale:    "en_US",
@@ -60,11 +71,15 @@ func (p *Publisher) connect() error {
 
 // publish a message without opening a new connection
 func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
-	// open new channel when closed
-	if p.conn == nil || p.ch == nil {
-		if err := p.connect(); err != nil {
-			return err
-		}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.conn == nil || p.conn.IsClosed() {
+		return fmt.Errorf("cannot publish, connection is closed or nil")
+	}
+
+	if p.ch == nil {
+		return fmt.Errorf("cannot publish, channel is closed or nil")
 	}
 
 	// marshaling metrics
@@ -80,9 +95,7 @@ func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
 		Body:         body,
 	})
 	if err != nil {
-		log.Println("Failed to publish, reconnecting:", err)
-		p.Close()
-		return err
+		return fmt.Errorf("failed to publish metric: %w", err)
 	}
 
 	log.Printf("Metric sent to queue: host=%s", metricMsg.Host.Hostname)
@@ -93,18 +106,20 @@ func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
 func (p *Publisher) StartMetricsPublisher() {
 	for {
 		if err := p.connect(); err != nil {
-			log.Println("Publisher connection failed, retrying in 5s:", err)
+			log.Println("Publisher connection failed, retrying:", err)
 			select {
-			case <-time.After(5 * time.Second):
-				continue
 			case <-p.ctx.Done():
 				log.Println("Publisher stopped by context")
 				return
+			case <-time.After(5 * time.Second):
+				continue
 			}
 		}
 
+		p.mu.Lock()
 		notifyClose := make(chan *amqp.Error, 1)
 		p.conn.NotifyClose(notifyClose)
+		p.mu.Unlock()
 
 		select {
 		case <-p.ctx.Done():
@@ -115,25 +130,26 @@ func (p *Publisher) StartMetricsPublisher() {
 			if err != nil {
 				log.Println("Publisher connection closed, reconnecting:", err)
 			}
-			p.Close()
-			time.Sleep(5 * time.Second)
 		}
 	}
 }
 
 // close channel and connection gracefully
 func (p *Publisher) Close() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	if p.ch != nil {
 		if err := p.ch.Close(); err != nil {
 			log.Println("Error closing channel:", err)
 		}
 		p.ch = nil
 	}
-	if p.conn != nil {
+	if p.conn != nil && !p.conn.IsClosed() {
 		if err := p.conn.Close(); err != nil {
 			log.Println("Error closing connection:", err)
 		}
-		p.conn = nil
 	}
+	p.conn = nil
 	log.Println("Publisher connection closed")
 }

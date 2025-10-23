@@ -84,15 +84,15 @@ func CollectMetricInfo() (models.Metric, error) {
 	}
 
 	// create Metric model
-	metric, err := models.NewMetric(
+	metric := models.NewMetric(
 		uptime,
 		cpuUsage,
 		memPercent,
 		diskMetric,
 		netMetric,
 	)
-	if err != nil {
-		return models.Metric{}, err
+	if metric == nil {
+		return models.Metric{}, nil
 	}
 
 	return *metric, nil

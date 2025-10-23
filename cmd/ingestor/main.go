@@ -37,14 +37,11 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-stop
-		log.Println("Shutting down ingestor...")
+		log.Println("Stopping ingestor...")
 		cancel()
 	}()
 
-	// create consumer
+	// create and start consumer
 	consumer := queue.NewConsumer(ctx, db, rabbitURL)
-
-	// start RabbitMQ consumer
-	log.Println("Starting RabbitMQ consumer...")
 	consumer.StartMetricsConsumer()
 }

@@ -26,7 +26,7 @@ func LoadConfig() *Config {
 
 	// default values
 	cfg := &Config{
-		RabbitURL: getEnv("RABBIT_URL", "amqp://guest:guest@localhost:5672/"),
+		RabbitURL: getEnv("RABBIT_URL", "amqp://metric:metric@localhost:5672/"),
 		GRPCPort:  getEnv("GRPC_PORT", "50051"),
 		DBHost:    getEnv("DB_HOST", "localhost"),
 		DBPort:    getEnv("DB_PORT", "5432"),

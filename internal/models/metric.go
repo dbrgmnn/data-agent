@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"log"
 	"time"
 )
 
@@ -18,22 +19,36 @@ type Metric struct {
 }
 
 // constructor for Metric
-func NewMetric(uptime uint64, cpu, ram float64, disk []DiskMetric, network []NetMetric) (*Metric, error) {
-	if cpu < 0 || cpu > 100 {
-		return nil, errors.New("invalid cpu value")
-	}
-	if ram < 0 || ram > 100 {
-		return nil, errors.New("invalid ram value")
-	}
+func NewMetric(uptime uint64, cpu, ram float64, disk []DiskMetric, network []NetMetric) *Metric {
 
-	return &Metric{
+	metric := &Metric{
 		Uptime:  uptime,
 		CPU:     cpu,
 		RAM:     ram,
 		Disk:    disk,
 		Network: network,
 		Time:    time.Now(),
-	}, nil
+	}
+	if err := metric.Validate(); err != nil {
+		log.Println("Metric validation error:", err)
+		return nil
+	}
+
+	return metric
+}
+
+// validation metrics
+func (m *Metric) Validate() error {
+	if m.Uptime == 0 {
+		return errors.New("invalid uptime value")
+	}
+	if m.CPU < 0 || m.CPU > 100 {
+		return errors.New("invalid cpu value")
+	}
+	if m.RAM < 0 || m.RAM > 100 {
+		return errors.New("invalid ram value")
+	}
+	return nil
 }
 
 // metrics for disk usage

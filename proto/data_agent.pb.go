@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v6.32.1
-// source: proto/monitoring.proto
+// source: proto/data_agent.proto
 
 package proto
 
@@ -29,7 +29,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_proto_monitoring_proto_msgTypes[0]
+	mi := &file_proto_data_agent_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -41,7 +41,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_monitoring_proto_msgTypes[0]
+	mi := &file_proto_data_agent_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -54,7 +54,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_proto_monitoring_proto_rawDescGZIP(), []int{0}
+	return file_proto_data_agent_proto_rawDescGZIP(), []int{0}
 }
 
 type Host struct {
@@ -71,7 +71,7 @@ type Host struct {
 
 func (x *Host) Reset() {
 	*x = Host{}
-	mi := &file_proto_monitoring_proto_msgTypes[1]
+	mi := &file_proto_data_agent_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -83,7 +83,7 @@ func (x *Host) String() string {
 func (*Host) ProtoMessage() {}
 
 func (x *Host) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_monitoring_proto_msgTypes[1]
+	mi := &file_proto_data_agent_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -96,7 +96,7 @@ func (x *Host) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Host.ProtoReflect.Descriptor instead.
 func (*Host) Descriptor() ([]byte, []int) {
-	return file_proto_monitoring_proto_rawDescGZIP(), []int{1}
+	return file_proto_data_agent_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Host) GetId() int64 {
@@ -150,7 +150,7 @@ type HostList struct {
 
 func (x *HostList) Reset() {
 	*x = HostList{}
-	mi := &file_proto_monitoring_proto_msgTypes[2]
+	mi := &file_proto_data_agent_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -162,7 +162,7 @@ func (x *HostList) String() string {
 func (*HostList) ProtoMessage() {}
 
 func (x *HostList) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_monitoring_proto_msgTypes[2]
+	mi := &file_proto_data_agent_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -175,7 +175,7 @@ func (x *HostList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HostList.ProtoReflect.Descriptor instead.
 func (*HostList) Descriptor() ([]byte, []int) {
-	return file_proto_monitoring_proto_rawDescGZIP(), []int{2}
+	return file_proto_data_agent_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *HostList) GetHosts() []*Host {
@@ -201,7 +201,7 @@ type Metric struct {
 
 func (x *Metric) Reset() {
 	*x = Metric{}
-	mi := &file_proto_monitoring_proto_msgTypes[3]
+	mi := &file_proto_data_agent_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -213,7 +213,7 @@ func (x *Metric) String() string {
 func (*Metric) ProtoMessage() {}
 
 func (x *Metric) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_monitoring_proto_msgTypes[3]
+	mi := &file_proto_data_agent_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -226,7 +226,7 @@ func (x *Metric) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Metric.ProtoReflect.Descriptor instead.
 func (*Metric) Descriptor() ([]byte, []int) {
-	return file_proto_monitoring_proto_rawDescGZIP(), []int{3}
+	return file_proto_data_agent_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Metric) GetId() int64 {
@@ -294,7 +294,7 @@ type MetricList struct {
 
 func (x *MetricList) Reset() {
 	*x = MetricList{}
-	mi := &file_proto_monitoring_proto_msgTypes[4]
+	mi := &file_proto_data_agent_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -306,7 +306,7 @@ func (x *MetricList) String() string {
 func (*MetricList) ProtoMessage() {}
 
 func (x *MetricList) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_monitoring_proto_msgTypes[4]
+	mi := &file_proto_data_agent_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -319,7 +319,7 @@ func (x *MetricList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricList.ProtoReflect.Descriptor instead.
 func (*MetricList) Descriptor() ([]byte, []int) {
-	return file_proto_monitoring_proto_rawDescGZIP(), []int{4}
+	return file_proto_data_agent_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MetricList) GetMetrics() []*Metric {
@@ -338,7 +338,7 @@ type HostName struct {
 
 func (x *HostName) Reset() {
 	*x = HostName{}
-	mi := &file_proto_monitoring_proto_msgTypes[5]
+	mi := &file_proto_data_agent_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -350,7 +350,7 @@ func (x *HostName) String() string {
 func (*HostName) ProtoMessage() {}
 
 func (x *HostName) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_monitoring_proto_msgTypes[5]
+	mi := &file_proto_data_agent_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -363,7 +363,7 @@ func (x *HostName) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HostName.ProtoReflect.Descriptor instead.
 func (*HostName) Descriptor() ([]byte, []int) {
-	return file_proto_monitoring_proto_rawDescGZIP(), []int{5}
+	return file_proto_data_agent_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *HostName) GetHostname() string {
@@ -383,7 +383,7 @@ type MetricRequest struct {
 
 func (x *MetricRequest) Reset() {
 	*x = MetricRequest{}
-	mi := &file_proto_monitoring_proto_msgTypes[6]
+	mi := &file_proto_data_agent_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -395,7 +395,7 @@ func (x *MetricRequest) String() string {
 func (*MetricRequest) ProtoMessage() {}
 
 func (x *MetricRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_monitoring_proto_msgTypes[6]
+	mi := &file_proto_data_agent_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -408,7 +408,7 @@ func (x *MetricRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricRequest.ProtoReflect.Descriptor instead.
 func (*MetricRequest) Descriptor() ([]byte, []int) {
-	return file_proto_monitoring_proto_rawDescGZIP(), []int{6}
+	return file_proto_data_agent_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *MetricRequest) GetHostname() string {
@@ -425,12 +425,12 @@ func (x *MetricRequest) GetLimit() int32 {
 	return 0
 }
 
-var File_proto_monitoring_proto protoreflect.FileDescriptor
+var File_proto_data_agent_proto protoreflect.FileDescriptor
 
-const file_proto_monitoring_proto_rawDesc = "" +
+const file_proto_data_agent_proto_rawDesc = "" +
 	"\n" +
-	"\x16proto/monitoring.proto\x12\n" +
-	"monitoring\"\a\n" +
+	"\x16proto/data_agent.proto\x12\n" +
+	"data_agent\"\a\n" +
 	"\x05Empty\"\xa0\x01\n" +
 	"\x04Host\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
@@ -441,7 +441,7 @@ const file_proto_monitoring_proto_rawDesc = "" +
 	"\n" +
 	"kernel_ver\x18\x06 \x01(\tR\tkernelVer\"2\n" +
 	"\bHostList\x12&\n" +
-	"\x05hosts\x18\x01 \x03(\v2\x10.monitoring.HostR\x05hosts\"\xaf\x01\n" +
+	"\x05hosts\x18\x01 \x03(\v2\x10.data_agent.HostR\x05hosts\"\xaf\x01\n" +
 	"\x06Metric\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\ahost_id\x18\x02 \x01(\x03R\x06hostId\x12\x16\n" +
@@ -453,52 +453,52 @@ const file_proto_monitoring_proto_rawDesc = "" +
 	"\x04time\x18\b \x01(\tR\x04time\":\n" +
 	"\n" +
 	"MetricList\x12,\n" +
-	"\ametrics\x18\x01 \x03(\v2\x12.monitoring.MetricR\ametrics\"&\n" +
+	"\ametrics\x18\x01 \x03(\v2\x12.data_agent.MetricR\ametrics\"&\n" +
 	"\bHostName\x12\x1a\n" +
 	"\bhostname\x18\x01 \x01(\tR\bhostname\"A\n" +
 	"\rMetricRequest\x12\x1a\n" +
 	"\bhostname\x18\x01 \x01(\tR\bhostname\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit2v\n" +
 	"\vHostService\x124\n" +
-	"\tListHosts\x12\x11.monitoring.Empty\x1a\x14.monitoring.HostList\x121\n" +
-	"\aGetHost\x12\x14.monitoring.HostName\x1a\x10.monitoring.Host2\x90\x01\n" +
+	"\tListHosts\x12\x11.data_agent.Empty\x1a\x14.data_agent.HostList\x121\n" +
+	"\aGetHost\x12\x14.data_agent.HostName\x1a\x10.data_agent.Host2\x90\x01\n" +
 	"\rMetricService\x12@\n" +
-	"\vListMetrics\x12\x19.monitoring.MetricRequest\x1a\x16.monitoring.MetricList\x12=\n" +
-	"\x10GetLatestMetrics\x12\x11.monitoring.Empty\x1a\x16.monitoring.MetricListB\x0eZ\f/proto;protob\x06proto3"
+	"\vListMetrics\x12\x19.data_agent.MetricRequest\x1a\x16.data_agent.MetricList\x12=\n" +
+	"\x10GetLatestMetrics\x12\x11.data_agent.Empty\x1a\x16.data_agent.MetricListB\x0eZ\f/proto;protob\x06proto3"
 
 var (
-	file_proto_monitoring_proto_rawDescOnce sync.Once
-	file_proto_monitoring_proto_rawDescData []byte
+	file_proto_data_agent_proto_rawDescOnce sync.Once
+	file_proto_data_agent_proto_rawDescData []byte
 )
 
-func file_proto_monitoring_proto_rawDescGZIP() []byte {
-	file_proto_monitoring_proto_rawDescOnce.Do(func() {
-		file_proto_monitoring_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_monitoring_proto_rawDesc), len(file_proto_monitoring_proto_rawDesc)))
+func file_proto_data_agent_proto_rawDescGZIP() []byte {
+	file_proto_data_agent_proto_rawDescOnce.Do(func() {
+		file_proto_data_agent_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_data_agent_proto_rawDesc), len(file_proto_data_agent_proto_rawDesc)))
 	})
-	return file_proto_monitoring_proto_rawDescData
+	return file_proto_data_agent_proto_rawDescData
 }
 
-var file_proto_monitoring_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
-var file_proto_monitoring_proto_goTypes = []any{
-	(*Empty)(nil),         // 0: monitoring.Empty
-	(*Host)(nil),          // 1: monitoring.Host
-	(*HostList)(nil),      // 2: monitoring.HostList
-	(*Metric)(nil),        // 3: monitoring.Metric
-	(*MetricList)(nil),    // 4: monitoring.MetricList
-	(*HostName)(nil),      // 5: monitoring.HostName
-	(*MetricRequest)(nil), // 6: monitoring.MetricRequest
+var file_proto_data_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_proto_data_agent_proto_goTypes = []any{
+	(*Empty)(nil),         // 0: data_agent.Empty
+	(*Host)(nil),          // 1: data_agent.Host
+	(*HostList)(nil),      // 2: data_agent.HostList
+	(*Metric)(nil),        // 3: data_agent.Metric
+	(*MetricList)(nil),    // 4: data_agent.MetricList
+	(*HostName)(nil),      // 5: data_agent.HostName
+	(*MetricRequest)(nil), // 6: data_agent.MetricRequest
 }
-var file_proto_monitoring_proto_depIdxs = []int32{
-	1, // 0: monitoring.HostList.hosts:type_name -> monitoring.Host
-	3, // 1: monitoring.MetricList.metrics:type_name -> monitoring.Metric
-	0, // 2: monitoring.HostService.ListHosts:input_type -> monitoring.Empty
-	5, // 3: monitoring.HostService.GetHost:input_type -> monitoring.HostName
-	6, // 4: monitoring.MetricService.ListMetrics:input_type -> monitoring.MetricRequest
-	0, // 5: monitoring.MetricService.GetLatestMetrics:input_type -> monitoring.Empty
-	2, // 6: monitoring.HostService.ListHosts:output_type -> monitoring.HostList
-	1, // 7: monitoring.HostService.GetHost:output_type -> monitoring.Host
-	4, // 8: monitoring.MetricService.ListMetrics:output_type -> monitoring.MetricList
-	4, // 9: monitoring.MetricService.GetLatestMetrics:output_type -> monitoring.MetricList
+var file_proto_data_agent_proto_depIdxs = []int32{
+	1, // 0: data_agent.HostList.hosts:type_name -> data_agent.Host
+	3, // 1: data_agent.MetricList.metrics:type_name -> data_agent.Metric
+	0, // 2: data_agent.HostService.ListHosts:input_type -> data_agent.Empty
+	5, // 3: data_agent.HostService.GetHost:input_type -> data_agent.HostName
+	6, // 4: data_agent.MetricService.ListMetrics:input_type -> data_agent.MetricRequest
+	0, // 5: data_agent.MetricService.GetLatestMetrics:input_type -> data_agent.Empty
+	2, // 6: data_agent.HostService.ListHosts:output_type -> data_agent.HostList
+	1, // 7: data_agent.HostService.GetHost:output_type -> data_agent.Host
+	4, // 8: data_agent.MetricService.ListMetrics:output_type -> data_agent.MetricList
+	4, // 9: data_agent.MetricService.GetLatestMetrics:output_type -> data_agent.MetricList
 	6, // [6:10] is the sub-list for method output_type
 	2, // [2:6] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -506,26 +506,26 @@ var file_proto_monitoring_proto_depIdxs = []int32{
 	0, // [0:2] is the sub-list for field type_name
 }
 
-func init() { file_proto_monitoring_proto_init() }
-func file_proto_monitoring_proto_init() {
-	if File_proto_monitoring_proto != nil {
+func init() { file_proto_data_agent_proto_init() }
+func file_proto_data_agent_proto_init() {
+	if File_proto_data_agent_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_monitoring_proto_rawDesc), len(file_proto_monitoring_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_data_agent_proto_rawDesc), len(file_proto_data_agent_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
-		GoTypes:           file_proto_monitoring_proto_goTypes,
-		DependencyIndexes: file_proto_monitoring_proto_depIdxs,
-		MessageInfos:      file_proto_monitoring_proto_msgTypes,
+		GoTypes:           file_proto_data_agent_proto_goTypes,
+		DependencyIndexes: file_proto_data_agent_proto_depIdxs,
+		MessageInfos:      file_proto_data_agent_proto_msgTypes,
 	}.Build()
-	File_proto_monitoring_proto = out.File
-	file_proto_monitoring_proto_goTypes = nil
-	file_proto_monitoring_proto_depIdxs = nil
+	File_proto_data_agent_proto = out.File
+	file_proto_data_agent_proto_goTypes = nil
+	file_proto_data_agent_proto_depIdxs = nil
 }

@@ -2,8 +2,8 @@ package db
 
 import (
 	"context"
-	"data-agent/internal/config"
-	"data-agent/internal/models"
+	"data_agent/internal/config"
+	"data_agent/internal/models"
 	"database/sql"
 	"encoding/json"
 	"errors"

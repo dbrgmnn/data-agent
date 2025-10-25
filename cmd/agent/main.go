@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"data-agent/internal/agent"
+	"data_agent/internal/agent"
 	"log"
 	"os"
 	"os/signal"

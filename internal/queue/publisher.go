@@ -2,7 +2,7 @@ package queue
 
 import (
 	"context"
-	"data-agent/internal/models"
+	"data_agent/internal/models"
 	"encoding/json"
 	"fmt"
 	"log"

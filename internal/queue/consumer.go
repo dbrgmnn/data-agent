@@ -2,8 +2,8 @@ package queue
 
 import (
 	"context"
-	dataBase "data-agent/internal/db"
-	"data-agent/internal/models"
+	dataBase "data_agent/internal/db"
+	"data_agent/internal/models"
 	"database/sql"
 	"encoding/json"
 	"fmt"

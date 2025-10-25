@@ -2,7 +2,7 @@ package grpcserver
 
 import (
 	"context"
-	"data-agent/proto"
+	"data_agent/proto"
 	"database/sql"
 )
 

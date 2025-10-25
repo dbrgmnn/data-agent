@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"data-agent/internal/models"
+	"data_agent/internal/models"
 	"errors"
 
 	"os"

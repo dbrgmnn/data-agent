@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v6.32.1
-// source: proto/monitoring.proto
+// source: proto/data_agent.proto
 
 package proto
 
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	HostService_ListHosts_FullMethodName = "/monitoring.HostService/ListHosts"
-	HostService_GetHost_FullMethodName   = "/monitoring.HostService/GetHost"
+	HostService_ListHosts_FullMethodName = "/data_agent.HostService/ListHosts"
+	HostService_GetHost_FullMethodName   = "/data_agent.HostService/GetHost"
 )
 
 // HostServiceClient is the client API for HostService service.
@@ -142,7 +142,7 @@ func _HostService_GetHost_Handler(srv interface{}, ctx context.Context, dec func
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var HostService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "monitoring.HostService",
+	ServiceName: "data_agent.HostService",
 	HandlerType: (*HostServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -155,12 +155,12 @@ var HostService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/monitoring.proto",
+	Metadata: "proto/data_agent.proto",
 }
 
 const (
-	MetricService_ListMetrics_FullMethodName      = "/monitoring.MetricService/ListMetrics"
-	MetricService_GetLatestMetrics_FullMethodName = "/monitoring.MetricService/GetLatestMetrics"
+	MetricService_ListMetrics_FullMethodName      = "/data_agent.MetricService/ListMetrics"
+	MetricService_GetLatestMetrics_FullMethodName = "/data_agent.MetricService/GetLatestMetrics"
 )
 
 // MetricServiceClient is the client API for MetricService service.
@@ -282,7 +282,7 @@ func _MetricService_GetLatestMetrics_Handler(srv interface{}, ctx context.Contex
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var MetricService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "monitoring.MetricService",
+	ServiceName: "data_agent.MetricService",
 	HandlerType: (*MetricServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -295,5 +295,5 @@ var MetricService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/monitoring.proto",
+	Metadata: "proto/data_agent.proto",
 }

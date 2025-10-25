@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"data-agent/internal/config"
-	dataBase "data-agent/internal/db"
-	"data-agent/internal/queue"
+	"data_agent/internal/config"
+	dataBase "data_agent/internal/db"
+	"data_agent/internal/queue"
 	"log"
 	"os"
 	"os/signal"

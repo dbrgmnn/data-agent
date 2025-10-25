@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package monitoring;
+package data_agent;
 
 option go_package = "/proto;proto";
 

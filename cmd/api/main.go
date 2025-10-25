@@ -1,10 +1,10 @@
 package main
 
 import (
-	"data-agent/internal/config"
-	dataBase "data-agent/internal/db"
-	"data-agent/internal/grpcserver"
-	"data-agent/proto"
+	"data_agent/internal/config"
+	dataBase "data_agent/internal/db"
+	"data_agent/internal/grpcserver"
+	"data_agent/proto"
 	"log"
 	"net"
 	"os"

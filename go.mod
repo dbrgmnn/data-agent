@@ -1,4 +1,4 @@
-module data-agent
+module data_agent
 
 go 1.25.1
 

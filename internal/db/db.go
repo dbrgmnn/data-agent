@@ -2,13 +2,13 @@ package db
 
 import (
 	"context"
+	"data-agent/internal/config"
+	"data-agent/internal/models"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
-	"monitoring/internal/config"
-	"monitoring/internal/models"
 	"time"
 
 	_ "github.com/lib/pq"

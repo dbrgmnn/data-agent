@@ -1,4 +1,4 @@
-module monitoring
+module data-agent
 
 go 1.25.1
 

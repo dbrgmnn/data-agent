@@ -2,10 +2,10 @@ package agent
 
 import (
 	"context"
+	"data-agent/internal/models"
+	"data-agent/internal/queue"
 	"flag"
 	"log"
-	"monitoring/internal/models"
-	"monitoring/internal/queue"
 	"net/url"
 	"time"
 )

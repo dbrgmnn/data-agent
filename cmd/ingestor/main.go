@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"data-agent/internal/config"
+	dataBase "data-agent/internal/db"
+	"data-agent/internal/queue"
 	"log"
-	"monitoring/internal/config"
-	dataBase "monitoring/internal/db"
-	"monitoring/internal/queue"
 	"os"
 	"os/signal"
 	"syscall"

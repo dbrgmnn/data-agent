@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"data-agent/internal/agent"
 	"log"
-	"monitoring/internal/agent"
 	"os"
 	"os/signal"
 	"syscall"

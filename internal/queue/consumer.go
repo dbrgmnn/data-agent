@@ -2,12 +2,12 @@ package queue
 
 import (
 	"context"
+	dataBase "data-agent/internal/db"
+	"data-agent/internal/models"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
-	dataBase "monitoring/internal/db"
-	"monitoring/internal/models"
 	"time"
 
 	"github.com/streadway/amqp"

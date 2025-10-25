@@ -1,8 +1,8 @@
 package agent
 
 import (
+	"data-agent/internal/models"
 	"errors"
-	"monitoring/internal/models"
 
 	"os"
 	"time"

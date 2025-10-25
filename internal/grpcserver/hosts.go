@@ -2,8 +2,8 @@ package grpcserver
 
 import (
 	"context"
+	"data-agent/proto"
 	"database/sql"
-	"monitoring/proto"
 )
 
 type HostService struct {

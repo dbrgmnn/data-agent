@@ -31,8 +31,8 @@ Clients can retrieve historical or current metrics for monitoring and analysis p
 1. **Clone the repository**  
    Clone the Data Agent source code from GitHub to your local machine:  
    ```bash
-   git clone https://github.com/dbrgmnn/data-agent.git
-   cd data-agent
+   git clone https://github.com/dbrgmnn/data_agent.git
+   cd data_agent
    ```  
    This downloads the project files and navigates into the project directory.
 
@@ -58,13 +58,17 @@ Clients can retrieve historical or current metrics for monitoring and analysis p
    ```bash
    GOOS=linux GOARCH=amd64 go build -o bin/agent cmd/agent/main.go
    ```  
+   Or for Linux ARM64 architecture:
+   ```bash
+   GOOS=linux GOARCH=arm64 go build -o bin/agent cmd/agent/main.go
+   ``` 
    This creates an executable binary in the `bin` directory.
 
 
 5. **Run services with Docker Compose**  
    Launch RabbitMQ, PostgreSQL, and other dependencies using Docker Compose:  
    ```bash
-   docker-compose up --build
+   docker-compose up --build -d
    ```  
    This sets up the required infrastructure for the agent to operate.
 
@@ -88,7 +92,7 @@ Clients can retrieve historical or current metrics for monitoring and analysis p
    The agent will begin collecting and publishing metrics every 2 seconds.
 
 
-8. **gRPC API**  
+## gRPC API
    The gRPC service exposes two main APIs:
 
 - **HostService**
@@ -98,6 +102,29 @@ Clients can retrieve historical or current metrics for monitoring and analysis p
 - **MetricService**
   - `ListMetrics` — returns a list of metrics for a given host
   - `GetLatestMetrics` — returns the most recent metrics snapshot
+
+### gRPC Examples
+Here are some example `grpcurl` commands to interact with the gRPC service:
+
+```shell
+grpcurl -plaintext localhost:50051 list
+```
+
+```shell
+grpcurl -plaintext localhost:50051 list data_agent.HostService
+```
+
+```shell
+grpcurl -plaintext localhost:50051 describe data_agent.HostService
+```
+
+```shell
+grpcurl -plaintext -d '{"hostname": "host1"}' localhost:50051 data_agent.HostService.GetHost
+```
+
+```shell
+grpcurl -plaintext -d '{"hostname": "host1"}' localhost:50051 data_agent.MetricService.ListMetrics
+```
 
 ---
 

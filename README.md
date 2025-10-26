@@ -27,7 +27,7 @@ Clients can retrieve historical or current metrics for monitoring and analysis p
 
 ---
 
-## Install
+### Install
 1. **Clone the repository**  
    Clone the Data Agent source code from GitHub to your local machine:  
    ```bash
@@ -91,8 +91,9 @@ Clients can retrieve historical or current metrics for monitoring and analysis p
    ```  
    The agent will begin collecting and publishing metrics every 2 seconds.
 
+---
 
-## gRPC API
+### gRPC API
    The gRPC service exposes two main APIs:
 
 - **HostService**

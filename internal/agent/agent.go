@@ -5,6 +5,7 @@ import (
 	"data_agent/internal/models"
 	"data_agent/internal/queue"
 	"flag"
+	"fmt"
 	"log"
 	"net/url"
 	"time"
@@ -48,23 +49,22 @@ func collectAndSend(publisher *queue.Publisher) error {
 }
 
 // parse flag --url and --interval
-func ParseFlags() (string, time.Duration) {
+func ParseFlags() (string, time.Duration, error) {
 	rabbitURL := flag.String("url", "", "RabbitMQ URL")
 	interval := flag.Int("interval", 2, "Interval in seconds between metric collections")
 	flag.Parse()
 
 	if *interval <= 0 {
-		log.Println("Invalid interval, using default 2 seconds")
 		*interval = 2
 	}
 
-	if *rabbitURL == "" {
-		log.Fatal("RabbitMQ URL must be specified with --url")
-	}
 	// validate URL format
+	if *rabbitURL == "" {
+		return "", 0, fmt.Errorf("rabbitMQ URL must be specified with --url")
+	}
 	u, err := url.Parse(*rabbitURL)
 	if err != nil || u.Scheme != "amqp" {
-		log.Fatalf("Invalid RabbitMQ URL: %s (expected format amqp://user:pass@host:port/)", *rabbitURL)
+		return "", 0, fmt.Errorf("invalid RabbitMQ URL: expected format amqp://user:pass@host:port/")
 	}
-	return *rabbitURL, time.Duration(*interval) * time.Second
+	return *rabbitURL, time.Duration(*interval) * time.Second, nil
 }

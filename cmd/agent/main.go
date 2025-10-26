@@ -29,6 +29,9 @@ func main() {
 	}()
 
 	// parse flags and run the agent
-	url, interval := agent.ParseFlags()
+	url, interval, err := agent.ParseFlags()
+	if err != nil {
+		log.Fatalf("Fatal to parse flags: %v", err)
+	}
 	agent.Run(ctx, url, interval)
 }

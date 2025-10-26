@@ -104,8 +104,13 @@ Clients can retrieve historical or current metrics for monitoring and analysis p
   - `GetLatestMetrics` — returns the most recent metrics snapshot
 
 ### gRPC Examples
-Here are some example `grpcurl` commands to interact with the gRPC service:
+Install `grpcurl` and add to $GOPATH:
+```shell
+go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
 
+**gRPC calls:**
 ```shell
 grpcurl -plaintext localhost:50051 list
 ```
@@ -119,12 +124,13 @@ grpcurl -plaintext localhost:50051 describe data_agent.HostService
 ```
 
 ```shell
-grpcurl -plaintext -d '{"hostname": "host1"}' localhost:50051 data_agent.HostService.GetHost
+grpcurl -plaintext -d '{"hostname": "host1"}' localhost:50051 data_agent.HostService/GetHost
 ```
 
 ```shell
-grpcurl -plaintext -d '{"hostname": "host1"}' localhost:50051 data_agent.MetricService.ListMetrics
+grpcurl -plaintext -d '{"hostname": "host1", "limit": 2}' localhost:50051 data_agent.MetricService/ListMetrics
 ```
+Replace `host1` with your target hostname.
 
 ---
 

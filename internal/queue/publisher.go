@@ -13,10 +13,10 @@ import (
 )
 
 type Publisher struct {
-	conn   *amqp.Connection
-	ch     *amqp.Channel
-	q      amqp.Queue
-	ctx    context.Context
+	Conn   *amqp.Connection
+	Ch     *amqp.Channel
+	Q      amqp.Queue
+	Ctx    context.Context
 	server string
 	mu     sync.Mutex
 }
@@ -24,7 +24,7 @@ type Publisher struct {
 // create a new publisher with context
 func NewPublisher(ctx context.Context, server string) *Publisher {
 	return &Publisher{
-		ctx:    ctx,
+		Ctx:    ctx,
 		server: server,
 	}
 }
@@ -35,7 +35,7 @@ func (p *Publisher) connect() error {
 	defer p.mu.Unlock()
 
 	// return nil if connection closed
-	if p.conn != nil && !p.conn.IsClosed() && p.ch != nil {
+	if p.Conn != nil && !p.Conn.IsClosed() && p.Ch != nil {
 		return nil
 	}
 
@@ -62,9 +62,9 @@ func (p *Publisher) connect() error {
 		return fmt.Errorf("failed to declare queue: %w", err)
 	}
 
-	p.conn = conn
-	p.ch = ch
-	p.q = q
+	p.Conn = conn
+	p.Ch = ch
+	p.Q = q
 	log.Println("Publisher connected and queue declared:", q.Name)
 	return nil
 }
@@ -74,11 +74,11 @@ func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.conn == nil || p.conn.IsClosed() {
+	if p.Conn == nil || p.Conn.IsClosed() {
 		return fmt.Errorf("cannot publish, connection is closed or nil")
 	}
 
-	if p.ch == nil {
+	if p.Ch == nil {
 		return fmt.Errorf("cannot publish, channel is closed or nil")
 	}
 
@@ -89,7 +89,7 @@ func (p *Publisher) Publish(metricMsg *models.MetricMessage) error {
 	}
 
 	// publish metrics
-	err = p.ch.Publish("", p.q.Name, false, false, amqp.Publishing{
+	err = p.Ch.Publish("", p.Q.Name, false, false, amqp.Publishing{
 		DeliveryMode: amqp.Persistent,
 		ContentType:  "application/json",
 		Body:         body,
@@ -108,7 +108,7 @@ func (p *Publisher) StartMetricsPublisher() {
 		if err := p.connect(); err != nil {
 			log.Println("Publisher connection failed, retrying:", err)
 			select {
-			case <-p.ctx.Done():
+			case <-p.Ctx.Done():
 				log.Println("Publisher stopped by context")
 				return
 			case <-time.After(5 * time.Second):
@@ -118,11 +118,11 @@ func (p *Publisher) StartMetricsPublisher() {
 
 		p.mu.Lock()
 		notifyClose := make(chan *amqp.Error, 1)
-		p.conn.NotifyClose(notifyClose)
+		p.Conn.NotifyClose(notifyClose)
 		p.mu.Unlock()
 
 		select {
-		case <-p.ctx.Done():
+		case <-p.Ctx.Done():
 			log.Println("Publisher stopping...")
 			p.Close()
 			return
@@ -139,17 +139,17 @@ func (p *Publisher) Close() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.ch != nil {
-		if err := p.ch.Close(); err != nil {
+	if p.Ch != nil {
+		if err := p.Ch.Close(); err != nil {
 			log.Println("Error closing channel:", err)
 		}
-		p.ch = nil
+		p.Ch = nil
 	}
-	if p.conn != nil && !p.conn.IsClosed() {
-		if err := p.conn.Close(); err != nil {
+	if p.Conn != nil && !p.Conn.IsClosed() {
+		if err := p.Conn.Close(); err != nil {
 			log.Println("Error closing connection:", err)
 		}
 	}
-	p.conn = nil
+	p.Conn = nil
 	log.Println("Publisher connection closed")
 }
